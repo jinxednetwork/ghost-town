@@ -1,39 +1,27 @@
 # Ghost Town: invite page
 
-This folder is the whole site. Requests go into a Google Sheet that only you can see.
+This folder is the whole site. Requests go into a Supabase table that only you can see.
 
 ```
 index.html              the page
 img/                    photos, logos, grain texture, link-preview image (og.jpg)
 audio/ghost-town.mp3    background track (loops; starts on the visitor's first tap)
-google-sheet/Code.gs    the script that writes each request into your Sheet
+supabase/schema.sql     the "requests" table and its insert-only rules
 ```
 
-## 1. Set up the Google Sheet (about 5 minutes)
+## 1. Where requests land
 
-1. Create a new Google Sheet, for example "Ghost Town: Requests".
-2. In the Sheet, open **Extensions > Apps Script**.
-3. Delete what's in the editor, paste in everything from `google-sheet/Code.gs`, and press **Save**.
-4. Click **Deploy > New deployment**. Next to "Select type", click the gear and choose **Web app**.
-   - Execute as: **Me**
-   - Who has access: **Anyone**
-5. Click **Deploy**, then sign in and allow access when Google asks. You'll see a warning that the app isn't verified. That's expected for your own script: click **Advanced > Go to project**.
-6. Copy the **Web app URL**. It ends in `/exec`.
-7. Paste that URL into your browser. You should see `{"ok":true,"message":"Ghost Town request endpoint is live."}`.
+Supabase project **ghost-town**: https://supabase.com/dashboard/project/gwwiljdhsojlpdsqqxab
 
-## 2. Connect the page to the Sheet
+Open **Table Editor > requests**. Each request is one row: received, name, phone, instagram, referrer, status, notes.
 
-Open `index.html` in a text editor. Find this line near the bottom:
+- **status** starts as `Pending`. Change it to `Approved`, `Paid` or `Declined` by editing the cell.
+- Filter or sort on any column; **Export > CSV** to open it in Google Sheets or Excel.
+- Visitors can only add rows. They can't read, edit or delete anything (see `supabase/schema.sql`).
 
-```js
-const INVITE_ENDPOINT = "";
-```
+## 2. Connection
 
-Paste your Web app URL between the quotes, then save the file:
-
-```js
-const INVITE_ENDPOINT = "https://script.google.com/macros/s/XXXXXXXX/exec";
-```
+`index.html` holds the table URL and the project's publishable key (`INVITE_ENDPOINT`, `SUPABASE_KEY`). The publishable key is meant to be public; the table's rules are what keep the data private.
 
 ## 3. Put the site online
 
@@ -50,29 +38,12 @@ After it's live, edit the `og:image` line at the top of `index.html` to the full
 
 ## 4. Test it once
 
-Open your live link on your phone, request an invite with your own details, and check that a new row appears in the **Requests** tab of the Sheet within a few seconds.
-
-## 5. Reviewing requests
-
-Each request lands as one row:
-
-| Received | Name | Phone | Instagram | Who sent them | Status | Notes |
-|---|---|---|---|---|---|---|
-
-- **Status** starts as `Pending` and has a dropdown: `Approved`, `Paid`, `Declined`.
-- Approve someone by changing their status, then send them the payment link on WhatsApp.
-- To get an email whenever a request arrives, open **Tools > Notification settings > Edit notifications** in the Sheet and choose "Any changes are made".
-- Filter on Status to see who's still waiting.
-
-## Changing the script later
-
-If you edit `Code.gs`, use **Deploy > Manage deployments > Edit (pencil) > Version: New version > Deploy**. The URL stays the same, so the page doesn't need changing.
+Open the live link on your phone, request an invite with your own details, and check that a new row appears in **Table Editor > requests**.
 
 ## If something goes wrong
 
-- **"Your request didn't reach the house"** appears: check that the URL in `INVITE_ENDPOINT` ends in `/exec`, and that the deployment's access is set to **Anyone**.
-- **No new row appears**: in Apps Script, open **Executions** on the left to see the error.
-- **No music**: browsers block sound until the visitor taps something. The track starts on the first tap anywhere, and the button in the bottom-left corner mutes or unmutes it. On an iPhone, the silent switch also mutes it.
+- **"Your request didn't reach the house"** appears: open the browser console for the error, and check the project isn't paused in the Supabase dashboard (free projects pause after a week without traffic).
+- **No music**: browsers block sound until the visitor taps something. The track starts on the first tap anywhere, and the button in the bottom-left corner mutes or unmutes it.
 
 ## A note on the music
 

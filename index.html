@@ -385,9 +385,10 @@
 </main>
 
 <script>
-  // Paste your Google Apps Script web app URL here (see README.md). It receives a JSON body.
-  // Left empty, the page shows the confirmation and opens the house, but stores nothing.
-  const INVITE_ENDPOINT = "https://script.google.com/macros/s/AKfycbxlCX7KOvJ1B25BdbJF1y--SINvQjzf6Ke_vELcKN6MDMUoLOrWGwhjN4GXPm3Foas/exec";
+  // Requests go to the "requests" table in the ghost-town Supabase project (see supabase/schema.sql).
+  // The publishable key is meant to be public: the table only lets visitors insert, never read.
+  const INVITE_ENDPOINT = "https://gwwiljdhsojlpdsqqxab.supabase.co/rest/v1/requests";
+  const SUPABASE_KEY = "sb_publishable_D5U449KkkGPhjupJ0s5Yfw_wiqGKCD0";
 
   const KEY = "ghosttown.requested";
   const gate = document.getElementById("gate");
@@ -583,7 +584,8 @@
     send.disabled = true; send.textContent = "Knocking";
     try {
       if (INVITE_ENDPOINT && !isBot) {
-        const res = await fetch(INVITE_ENDPOINT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(data) });
+        const { name, phone, instagram, referrer } = data;
+        const res = await fetch(INVITE_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Prefer: "return=minimal" }, body: JSON.stringify({ name, phone, instagram, referrer }) });
         if (!res.ok) throw new Error("Request failed");
       }
       writeStore();
