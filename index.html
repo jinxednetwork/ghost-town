@@ -436,7 +436,7 @@
   const MUTE_KEY = "ghosttown.muted";
   let userMuted = false;
   try { userMuted = localStorage.getItem(MUTE_KEY) === "1"; } catch (e) {}
-  bgm.volume = 0.385;
+  bgm.volume = 0.55;
   function paint() {
     const playing = !bgm.paused && !bgm.muted;
     soundBtn.classList.toggle("playing", playing);
@@ -467,7 +467,7 @@
   addEventListener("pointerdown", firstTouch, true); addEventListener("keydown", firstTouch, true);
   startMusic(); // works only where the browser allows autoplay
   function duck(on) {
-    const target = on ? 0.105 : 0.385, from = bgm.volume, t0 = performance.now();
+    const target = on ? 0.15 : 0.55, from = bgm.volume, t0 = performance.now();
     (function step(now) { const k = Math.min(1, (now - t0) / 600); bgm.volume = from + (target - from) * k; if (k < 1) requestAnimationFrame(step); })(t0);
   }
 
