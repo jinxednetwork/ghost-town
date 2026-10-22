@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A 250-year-old house. One party that never ended. Request an invite.">
+<meta name="theme-color" content="#070707">
+<meta property="og:title" content="Ghost Town">
+<meta property="og:description" content="A 250-year-old house. One party that never ended. Request an invite.">
+<!-- After you deploy, change this to the full address, e.g. https://ghosttown.yourdomain.com/img/og.jpg -->
+<meta property="og:image" content="img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>html,body{margin:0;padding:0} :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} img{max-width:100%}</style>
+<title>Ghost Town</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: one dark screen (the gate) lit by a candle that follows the cursor; after a request, the house opens below it. Single dark look by choice. */
+  :root {
+    --night: #070707;
+    --ash: #141312;
+    --bone: #ece8e1;
+    --bone-dim: #a39d94;
+    --smoke: #6f6a63;
+    --line: #2c2926;
+    --blood: #c8241a;
+    --blood-hi: #e2352a;
+    --f-black: "UnifrakturMaguntia", "Old English Text MT", "Luminari", serif;
+    --f-body: "IM Fell English", "Iowan Old Style", Georgia, serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { background: var(--night); }
+  body { background: var(--night); color: var(--bone); font-family: var(--f-body); font-size: 18px; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--blood); color: var(--bone); }
+  .grain { position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: .5; background: url(img/grain.png); }
+  .mono { font: 400 12px/1.6 var(--f-mono); letter-spacing: .26em; text-transform: uppercase; color: var(--bone-dim); }
+  .red { color: var(--blood); }
+  .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--blood-hi); outline-offset: 3px; }
+
+  /* ---------- The gate ---------- */
+  .gate { position: relative; min-height: 100svh; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; isolation: isolate; padding-block: 24px; }
+  .house { position: absolute; inset: 0; z-index: -3; background: url(img/facade.jpg) center 35% / cover; opacity: .55; }
+  .ghost { position: absolute; z-index: -2; left: 56%; top: 18%; width: min(22vw, 220px); aspect-ratio: 4/5; background: url(img/isabel.jpg) center / cover; mix-blend-mode: screen; opacity: 0; filter: grayscale(1); animation: haunt 11s ease-in-out 3s infinite; }
+  @keyframes haunt { 0%, 62%, 100% { opacity: 0; transform: translateY(6px); } 72% { opacity: .38; transform: translateY(0); } 80% { opacity: .1; } 84% { opacity: .3; } }
+  .dark { position: absolute; inset: 0; z-index: -1; background: radial-gradient(circle at var(--x, 50%) var(--y, 42%), rgba(7,7,7,0) 0, rgba(7,7,7,.55) 110px, rgba(7,7,7,.94) 300px, var(--night) 520px); transition: background .05s linear; }
+  .gate-top, .gate-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .gate-mid { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 22px; padding-block: 40px; }
+  .est { letter-spacing: .5em; }
+  h1.logo { margin: 0; font: 400 clamp(84px, 17vw, 260px)/.86 var(--f-black); color: #f2eee8; text-wrap: balance; animation: wake 2.4s steps(1, end) .2s both; }
+  @keyframes wake { 0% { opacity: 0 } 8% { opacity: .9 } 12% { opacity: .1 } 22% { opacity: 1 } 27% { opacity: .2 } 32% { opacity: .95 } 48% { opacity: .35 } 53%, 100% { opacity: 1 } }
+  .tag { margin: 0; font: italic clamp(19px, 2.4vw, 28px)/1.35 var(--f-body); color: #d6d1c9; max-width: 30ch; }
+  .rule { width: 72px; height: 2px; background: var(--blood); }
+  .cta { margin-top: 8px; appearance: none; background: transparent; border: 1.5px solid var(--bone); color: var(--bone); padding: 16px 34px; font: 500 13px var(--f-mono); letter-spacing: .3em; text-transform: uppercase; cursor: pointer; transition: background .25s, color .25s, border-color .25s; min-height: 48px; }
+  .cta:hover { background: var(--blood); border-color: var(--blood); color: var(--bone); }
+  .fine { max-width: 46ch; margin: 0 auto; text-align: center; font: italic 15px/1.55 var(--f-body); color: var(--bone-dim); }
+  .gate-foot { flex-direction: column; align-items: center; gap: 10px; }
+  .gate-top { align-items: center; }
+  .logos { display: flex; align-items: center; gap: 12px; opacity: .72; }
+  .lg-ref { height: 30px; width: auto; }
+  .lg-jx { height: 22px; width: auto; }
+  .x { font: 400 13px var(--f-mono); color: var(--smoke); }
+  .host { letter-spacing: .3em; }
+  .closing .logos { justify-content: center; margin: 28px 0 14px; opacity: .6; }
+  .enter-link { appearance: none; background: none; border: 0; padding: 4px 0; cursor: pointer; }
+  .enter-link:hover { color: var(--bone); }
+
+  /* ---------- Request dialog ---------- */
+  dialog { width: min(30rem, calc(100% - 32px)); max-height: calc(100% - 32px); overflow-y: auto; margin: auto; padding: 0; background: var(--ash); color: var(--bone); border: 1px solid var(--line); }
+  dialog::backdrop { background: rgba(4,4,4,.82); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  dialog[open] { animation: rise .35s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+  .sheet { position: relative; padding: 34px 28px 28px; }
+  .sheet h2 { margin: 6px 0 4px; font: 400 44px/1 var(--f-black); }
+  .sheet .note { margin: 0 0 22px; font: italic 17px/1.5 var(--f-body); color: var(--bone-dim); }
+  .close { position: absolute; top: 10px; right: 10px; width: 44px; height: 44px; border: 0; background: none; color: var(--bone-dim); font-size: 26px; cursor: pointer; }
+  .close:hover { color: var(--bone); }
+  .field { display: block; margin-bottom: 16px; }
+  .field > span { display: block; margin-bottom: 6px; }
+  .field input { width: 100%; padding: 10px 0; background: transparent; border: 0; border-bottom: 1px solid var(--smoke); border-radius: 0; font: 20px var(--f-body); color: var(--bone); }
+  .field input:focus { outline: none; border-bottom-color: var(--blood-hi); }
+  .field input[aria-invalid="true"] { border-bottom-color: var(--blood-hi); }
+  .err { min-height: 1.3em; margin: 6px 0 0; font: 13px var(--f-mono); color: var(--blood-hi); }
+  .trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .send { width: 100%; margin-top: 6px; padding: 16px; min-height: 52px; border: 0; background: var(--blood); color: var(--bone); font: 500 13px var(--f-mono); letter-spacing: .3em; text-transform: uppercase; cursor: pointer; }
+  .send:hover { background: var(--blood-hi); }
+  .send:disabled { opacity: .6; cursor: progress; }
+  .small { margin: 14px 0 0; font: italic 14px/1.5 var(--f-body); color: var(--smoke); }
+
+  /* ---------- Doors-open interstitial ---------- */
+  .doors { position: fixed; inset: 0; z-index: 40; background: rgba(7,7,7,.96); display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); cursor: pointer; transition: opacity .9s ease; }
+  .doors.out { opacity: 0; }
+  .joke { display: flex; flex-direction: column; align-items: center; gap: 14px; transition: opacity .8s ease; }
+  .joke.out { opacity: 0; }
+  .joke p { margin: 0; opacity: 0; transform: translateY(10px); transition: opacity .6s ease, transform .6s ease; }
+  .joke p.on { opacity: 1; transform: none; }
+  .joke .them { font: 400 clamp(44px, 8vw, 92px)/1 var(--f-black); color: var(--bone); }
+  .joke .us { font: italic clamp(22px, 3vw, 32px)/1.3 var(--f-body); color: var(--bone-dim); }
+  .joke .punch { font: italic clamp(24px, 3.4vw, 38px)/1.3 var(--f-body); color: var(--blood-hi); max-width: 24ch; }
+  .opened { position: absolute; margin: 0; font: 400 clamp(40px, 8vw, 96px)/1 var(--f-black); opacity: 0; transition: opacity 1s ease; }
+  .opened.on { opacity: 1; }
+  .skip { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); appearance: none; background: none; border: 1px solid var(--line); color: var(--bone-dim); padding: 10px 16px; min-height: 44px; font: 500 11px var(--f-mono); letter-spacing: .26em; text-transform: uppercase; cursor: pointer; }
+  .skip:hover { color: var(--bone); border-color: var(--bone-dim); }
+  .shake { animation: shake .28s ease; }
+  @keyframes shake { 0%, 100% { transform: none } 20% { transform: translate(-4px, 1px) } 40% { transform: translate(4px, -1px) } 60% { transform: translate(-3px, 0) } 80% { transform: translate(2px, 1px) } }
+
+  /* ---------- Inside the house ---------- */
+  .inside { padding-block: 40px 80px; }
+  .col { max-width: 1120px; margin: 0 auto; }
+  .received { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: baseline; justify-content: space-between; border: 1px solid var(--line); padding: 18px 22px; }
+  .received strong { font: 400 30px var(--f-black); color: var(--bone); }
+  .received span { font: italic 17px var(--f-body); color: var(--bone-dim); }
+  section.room { padding-top: 96px; }
+  .eyebrow { display: block; font: 500 12px var(--f-mono); letter-spacing: .3em; text-transform: uppercase; color: var(--blood); margin-bottom: 12px; }
+  h3 { margin: 0 0 28px; font: 400 clamp(32px, 4.6vw, 54px)/1.08 var(--f-body); text-wrap: balance; }
+  .legend { columns: 2 22rem; column-gap: 64px; }
+  .legend p { margin: 0 0 18px; font-size: 21px; line-height: 1.6; color: #d6d1c9; break-inside: avoid; }
+  .legend p:first-child::first-letter { float: left; font: 400 96px/.8 var(--f-black); color: var(--blood); margin: 8px 12px 0 0; }
+  .welcome { font: 400 clamp(36px, 5vw, 60px)/1 var(--f-black); margin-top: 10px; }
+  .residents { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 40px 32px; }
+  .res img { display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover; filter: grayscale(1) contrast(1.05); background: var(--ash); }
+  .res .where { margin-top: 16px; }
+  .res h4 { margin: 6px 0 6px; font: 400 28px/1.15 var(--f-body); }
+  .res p { margin: 0; font-size: 17px; line-height: 1.5; color: var(--bone-dim); }
+  .res blockquote { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font: italic 18px/1.45 var(--f-body); color: var(--bone); }
+  .res.noimg { border-top: 1px solid var(--line); padding-top: 18px; }
+  .res.noimg .where { margin-top: 0; }
+  .mapbox { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+  .mapscroll { overflow-x: auto; }
+  .map { display: block; width: 100%; min-width: 520px; height: auto; }
+  .map .mz { font: 400 11px var(--f-mono); letter-spacing: .2em; fill: var(--smoke); }
+  .map .mz.red { fill: var(--blood); }
+  .map .mn { font: 500 15px var(--f-mono); fill: var(--night); }
+  .keys { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .keys li { display: grid; grid-template-columns: 30px 1fr; align-items: baseline; font-size: 20px; }
+  .keys b { font: 500 14px var(--f-mono); color: var(--blood); }
+  .keys small { display: block; margin-top: 2px; font: 400 11px var(--f-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--smoke); }
+  .night { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .night li { display: grid; grid-template-columns: 130px 1fr; gap: 24px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+  .night time { font: 500 15px var(--f-mono); letter-spacing: .14em; color: var(--blood); font-variant-numeric: tabular-nums; padding-top: 6px; }
+  .night h4 { margin: 0 0 4px; font: 400 26px var(--f-body); }
+  .night p { margin: 0; font-size: 17px; line-height: 1.5; color: var(--bone-dim); max-width: 60ch; }
+  .band { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr)); gap: 20px; }
+  .dj img { display: block; width: 100%; aspect-ratio: 3/4; object-fit: cover; filter: grayscale(1); background: var(--ash); }
+  .dj span { display: block; margin-top: 12px; font: 500 13px var(--f-mono); letter-spacing: .24em; text-transform: uppercase; }
+  .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 32px; }
+  .rules div { border-top: 1px solid var(--line); padding-top: 18px; }
+  .rules strong { display: block; font: 400 26px var(--f-body); margin-bottom: 6px; }
+  .rules p { margin: 0; font-size: 17px; line-height: 1.5; color: var(--bone-dim); }
+  .closing { padding-top: 120px; text-align: center; }
+  .closing p { margin: 0 0 18px; font: 400 clamp(40px, 7vw, 84px)/1 var(--f-black); }
+  .sound { position: fixed; z-index: 45; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 8px; height: 44px; min-width: 44px; padding: 0 12px; appearance: none; background: rgba(7,7,7,.6); border: 1px solid var(--line); border-radius: 22px; color: var(--bone-dim); cursor: pointer; opacity: .7; transition: opacity .2s, color .2s, border-color .2s; }
+  .sound:hover, .sound:focus-visible { opacity: 1; color: var(--bone); border-color: var(--smoke); }
+  .sound svg { width: 18px; height: 18px; flex: none; }
+  .sound .eq { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+  .sound .eq i { display: block; width: 2px; height: 3px; background: var(--blood); }
+  .sound.playing .eq i { animation: eq 1s ease-in-out infinite; }
+  .sound.playing .eq i:nth-child(2) { animation-delay: -.35s; }
+  .sound.playing .eq i:nth-child(3) { animation-delay: -.7s; }
+  @keyframes eq { 0%, 100% { height: 3px } 50% { height: 12px } }
+  .sound .off { display: none; }
+  .sound.muted .on { display: none; }
+  .sound.muted .off { display: block; }
+  .sound.muted .eq { display: none; }
+  @media (max-width: 760px) {
+    .mapbox { grid-template-columns: 1fr; }
+    .night li { grid-template-columns: 1fr; gap: 4px; }
+    .gate-foot { justify-content: center; text-align: center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    h1.logo, dialog[open], .shake { animation: none; }
+    .joke p, .joke, .doors, .opened { transition: none; }
+    .ghost { animation: none; opacity: .18; }
+    .sound.playing .eq i { animation: none; height: 8px; }
+    .dark { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+<audio id="bgm" src="audio/ghost-town.mp3" loop preload="auto"></audio>
+<button class="sound muted" id="sound" type="button" aria-label="Play music" aria-pressed="false">
+  <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+  <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+  <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+</button>
+
+<header class="gate wrap" id="gate">
+  <div class="house" aria-hidden="true"></div>
+  <div class="ghost" aria-hidden="true"></div>
+  <div class="dark" id="dark" aria-hidden="true"></div>
+  <div class="gate-top"><div class="logos"><img src="img/ref.png" alt="References" class="lg-ref"><span class="x" aria-hidden="true">&times;</span><img src="img/jinxed.png" alt="Jinxed" class="lg-jx"><span class="mono">present</span></div><span class="mono">30 &middot; 10</span></div>
+  <div class="gate-mid">
+    <span class="mono est">Est. 1776</span>
+    <h1 class="logo">Ghost Town</h1>
+    <div class="rule" aria-hidden="true"></div>
+    <p class="tag">A 250-year-old house. One party that never ended.</p>
+    <button class="cta" id="open" type="button" aria-haspopup="dialog">Request an invite</button>
+  </div>
+  <div class="gate-foot">
+    <p class="mono host">Hosted by <span class="red">Ian Almeida</span></p>
+    <p class="fine">A paid, invite-only house party. A request isn&rsquo;t entry: every guest is hand-picked. Six DJs, dusk till midnight. Mama&rsquo;s Jamba Juice with every ticket. iykyk.</p>
+  </div>
+</header>
+
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <div class="sheet">
+    <button class="close" type="button" id="close" aria-label="Close">&times;</button>
+    <span class="mono red">Dona Isabel is expecting you</span>
+    <h2 id="dlg-title">Request an invite</h2>
+    <p class="note">The house is small. We read every request.</p>
+    <form id="form" novalidate>
+      <label class="field"><span class="mono">Name</span>
+        <input id="f-name" name="name" autocomplete="name" required aria-describedby="e-name"></label>
+      <p class="err" id="e-name" aria-live="polite"></p>
+      <label class="field"><span class="mono">Phone (WhatsApp)</span>
+        <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required aria-describedby="e-phone"></label>
+      <p class="err" id="e-phone" aria-live="polite"></p>
+      <label class="field"><span class="mono">Instagram</span>
+        <input id="f-ig" name="instagram" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="@" required aria-describedby="e-ig"></label>
+      <p class="err" id="e-ig" aria-live="polite"></p>
+      <label class="field"><span class="mono">Who sent you? (optional)</span>
+        <input id="f-ref" name="referrer" autocomplete="off"></label>
+      <div class="trap" aria-hidden="true"><label>Leave empty <input id="f-web" name="website" tabindex="-1" autocomplete="off"></label></div>
+      <button class="send" id="send" type="submit">Knock on the door</button>
+      <p class="small">Paid and invite only. Sending a request doesn&rsquo;t confirm entry.</p>
+    </form>
+  </div>
+</dialog>
+
+<div class="doors" id="doors" hidden>
+  <div class="joke" id="joke" aria-live="polite">
+    <p class="them" id="j1"></p>
+    <p class="us" id="j2"></p>
+    <p class="them" id="j3"></p>
+    <p class="us" id="j4"></p>
+    <p class="punch" id="j5"></p>
+  </div>
+  <p class="opened" id="opened">The doors open.</p>
+  <button class="skip" id="skip" type="button">Skip</button>
+</div>
+
+<main class="inside wrap" id="inside" hidden>
+  <div class="col">
+    <div class="received" role="status">
+      <strong>Your request has reached the house.</strong>
+      <span>If there&rsquo;s a place for you, we&rsquo;ll message you on WhatsApp. Until then, here&rsquo;s who is playing and who you&rsquo;ll meet.</span>
+    </div>
+
+    <section class="room" aria-labelledby="h-band">
+      <span class="eyebrow">I. Who&rsquo;s playing</span>
+      <h3 id="h-band">Six DJs. Dusk till midnight.</h3>
+      <div class="band">
+        <figure class="dj" style="margin:0"><img src="img/dj_taniya.jpg" alt="Taniya" loading="lazy"><span>Taniya</span></figure>
+        <figure class="dj" style="margin:0"><img src="img/dj_ria.jpg" alt="Ria" loading="lazy"><span>Ria</span></figure>
+        <figure class="dj" style="margin:0"><img src="img/dj_harsh.jpg" alt="Harsh" loading="lazy"><span>Harsh</span></figure>
+        <figure class="dj" style="margin:0"><img src="img/dj_42.jpg" alt="42" loading="lazy"><span>42</span></figure>
+        <figure class="dj" style="margin:0"><img src="img/dj_rishiraj.jpg" alt="Rishiraj Doss" loading="lazy"><span>Rishiraj Doss</span></figure>
+        <figure class="dj" style="margin:0"><img src="img/dj_apploz.jpg" alt="Apploz" loading="lazy"><span>Apploz</span></figure>
+      </div>
+    </section>
+
+    <section class="room" aria-labelledby="h-legend">
+      <span class="eyebrow">II. The legend</span>
+      <h3 id="h-legend">The night the music stopped.</h3>
+      <div class="legend">
+        <p>In 1776 a Portuguese merchant family raised a house among the palms of Versova. It had whitewashed walls, arched windows, a deep stone well in the yard, and a hall wide enough for a hundred dancers.</p>
+        <p>Dona Isabel de Mello, the lady of the house, set the date for the house-warming: the thirtieth of October. She invited everyone who mattered and a few who didn&rsquo;t. The bandmaster tuned his strings. The boatman rowed guests in across the creek. Her twin daughters wore matching white.</p>
+        <p>At midnight the music stopped mid-note, and nobody left. No one in Versova agrees on why. Some blame the well, some blame the wine, and some say Dona Isabel simply refused to let a good party end.</p>
+        <p>For 250 years the house has kept its guests. Once a year, on the thirtieth of October, the doors open, the band picks up the note it dropped, and the living are let in <span class="red">until midnight</span>.</p>
+        <p class="welcome">Welcome to Ghost Town.</p>
+      </div>
+    </section>
+
+    <section class="room" aria-labelledby="h-res">
+      <span class="eyebrow">III. The residents</span>
+      <h3 id="h-res">Nine guests never left.</h3>
+      <div class="residents">
+        <article class="res"><img src="img/isabel.jpg" alt="A pale face projected on a hanging veil" loading="lazy"><div class="mono where red">The 1st Hall</div><h4>Dona Isabel de Mello</h4><p>The lady of the house. She set the date in 1776 and has never changed it.</p><blockquote>&ldquo;You&rsquo;re late. Everyone else has been here for 250 years.&rdquo;</blockquote></article>
+        <article class="res"><img src="img/twins.jpg" alt="Twin faces projected on a veil" loading="lazy"><div class="mono where red">The 1st Hall walls</div><h4>In&ecirc;s &amp; Clara</h4><p>Her twin daughters, always in matching white. They watch from every veil.</p><blockquote>&ldquo;We saved you a seat. We always do.&rdquo;</blockquote></article>
+        <article class="res"><img src="img/star.jpg" alt="Five beams of light forming a star" loading="lazy"><div class="mono where red">The ballroom</div><h4>Mestre Afonso</h4><p>The bandmaster. His music stopped mid-note at midnight. Tonight he picks it up.</p><blockquote>&ldquo;Six musicians tonight. I taught all of them.&rdquo;</blockquote></article>
+        <article class="res"><img src="img/hands.jpg" alt="Pale hands reaching out of a brick wall" loading="lazy"><div class="mono where red">The corridor</div><h4>The Last Dancers</h4><p>Guests who tried to leave the 1776 party. Only their hands made it out.</p><blockquote>&ldquo;We only stepped out for air.&rdquo;</blockquote></article>
+        <article class="res"><img src="img/web.jpg" alt="A white web of stretched fabric overhead" loading="lazy"><div class="mono where red">Bento&rsquo;s Landing</div><h4>Bento the Boatman</h4><p>He rowed guests in across the creek and steered by the stars he still waits under.</p><blockquote>&ldquo;Smoke if you must. I&rsquo;ve been waiting for a light since 1776.&rdquo;</blockquote></article>
+        <article class="res"><img src="img/trees.jpg" alt="The old yard and its trees" loading="lazy"><div class="mono where red">The two trees</div><h4>The Lovers</h4><p>Two guests who slipped out to meet beneath the trees. They are still reaching.</p><blockquote>&ldquo;Don&rsquo;t tell Dona Isabel.&rdquo;</blockquote></article>
+        <article class="res noimg"><div class="mono where red">The well</div><h4>Rosa, the Well Keeper</h4><p>She kept the well and warned everyone off its edge. Nobody listened.</p><blockquote>&ldquo;Stay back from the edge. I mean it.&rdquo;</blockquote></article>
+        <article class="res noimg"><div class="mono where red">The kitchen</div><h4>Tia F&aacute;tima</h4><p>The cook. No guest has ever set foot in her kitchen, living or dead.</p><blockquote>&ldquo;Out. Nobody comes into my kitchen.&rdquo;</blockquote></article>
+        <article class="res noimg"><div class="mono where red">Upstairs</div><h4>The Upstairs Guest</h4><p>Nobody knows who. Nobody has been up to ask.</p><blockquote>&ldquo;The upper floor is closed. Not by us.&rdquo;</blockquote></article>
+      </div>
+    </section>
+
+    <section class="room" aria-labelledby="h-map">
+      <span class="eyebrow">IV. Where they wait</span>
+      <h3 id="h-map">A map of the house, after dark.</h3>
+      <div class="mapbox">
+        <div class="mapscroll"><svg viewBox="0 0 993 694" class="map" aria-label="Map of the house with each ghost marked">
+<rect x="16.4" y="13.5" width="960.0" height="652.9" rx="38" fill="none" stroke="#3a3632" stroke-width="1.5" stroke-dasharray="3 6"/>
+<polygon points="82.3,263.8 134.7,263.8 134.7,318.4 82.3,318.4" fill="rgba(236,232,225,0.05)" stroke="#ece8e1" stroke-width="1.4"/>
+<polygon points="134.7,163.7 234.8,163.7 234.8,443.5 134.7,443.5" fill="rgba(236,232,225,0.05)" stroke="#ece8e1" stroke-width="1.4"/>
+<polygon points="234.8,163.7 416.8,163.7 416.8,443.5 234.8,443.5" fill="rgba(236,232,225,0.05)" stroke="#ece8e1" stroke-width="1.4"/>
+<polygon points="237.0,382.1 296.2,382.1 296.2,443.5 237.0,443.5" fill="rgba(236,232,225,0.05)" stroke="#ece8e1" stroke-width="1.4"/>
+<polygon points="421.3,266.1 760.3,266.1 760.3,345.7 421.3,345.7" fill="rgba(236,232,225,0.05)" stroke="#ece8e1" stroke-width="1.4"/>
+<polygon points="760.3,250.1 812.6,250.1 812.6,318.4 760.3,318.4" fill="rgba(236,232,225,0.05)" stroke="#ece8e1" stroke-width="1.4"/>
+<polygon points="530.5,59.1 883.2,59.1 883.2,247.9 530.5,247.9" fill="none" stroke="#56514b" stroke-width="1"/>
+<polygon points="30.0,52.2 75.5,20.4 530.5,15.8 530.5,266.1 421.3,266.1 421.3,163.7 134.7,163.7 20.9,166.0" fill="none" stroke="#56514b" stroke-width="1"/>
+<polygon points="598.8,525.4 689.8,525.4 689.8,652.8 598.8,652.8" fill="none" stroke="#56514b" stroke-width="1"/>
+<polygon points="808.1,543.6 853.6,543.6 853.6,634.6 808.1,634.6" fill="none" stroke="#56514b" stroke-width="1"/>
+<polygon points="414.5,345.7 769.4,345.7 769.4,445.8 414.5,445.8" fill="rgba(236,232,225,0.05)" stroke="#ece8e1" stroke-width="1.4"/>
+<polygon points="34.6,461.7 321.2,461.7 321.2,639.2 34.6,639.2" fill="none" stroke="#56514b" stroke-width="1"/>
+<text x="183.6" y="428.4" class="mz" text-anchor="middle">1ST HALL</text>
+<text x="326.4" y="183.6" class="mz" text-anchor="middle">MAIN HALL</text>
+<text x="584.8" y="285.6" class="mz" text-anchor="middle">PATIO</text>
+<text x="503.2" y="428.4" class="mz" text-anchor="middle">KITCHEN</text>
+<text x="707.2" y="74.8" class="mz" text-anchor="middle">SMOKING AREA</text>
+<text x="258.4" y="40.8" class="mz" text-anchor="middle">BACK YARD</text>
+<text x="176.8" y="622.2" class="mz" text-anchor="middle">PARKING</text>
+<text x="831.0" y="654.5" class="mz" text-anchor="middle">TOILETS</text>
+<text x="644.3" y="671.5" class="mz" text-anchor="middle">OUTBUILDING</text>
+<text x="786.4" y="239.7" class="mz" text-anchor="middle">BAR</text>
+<circle cx="553.3" cy="593.7" r="14" fill="none" stroke="#ece8e1" stroke-width="1.4"/>
+<circle cx="621.5" cy="43.1" r="11" fill="none" stroke="#56514b" stroke-width="1"/>
+<circle cx="826.3" cy="47.7" r="11" fill="none" stroke="#56514b" stroke-width="1"/>
+<line x1="178.0" y1="666.5" x2="278.0" y2="666.5" stroke="#c8241a" stroke-width="3"/>
+<text x="228.0" y="690.5" class="mz red" text-anchor="middle">YOU ENTER HERE</text>
+<circle cx="170.0" cy="231.2" r="15" fill="#c8241a"/><text x="170.0" y="236.7" class="mn" text-anchor="middle">1</text>
+<circle cx="170.0" cy="353.6" r="15" fill="#c8241a"/><text x="170.0" y="359.1" class="mn" text-anchor="middle">2</text>
+<circle cx="336.6" cy="374.0" r="15" fill="#c8241a"/><text x="336.6" y="379.5" class="mn" text-anchor="middle">3</text>
+<circle cx="584.8" cy="309.4" r="15" fill="#c8241a"/><text x="584.8" y="314.9" class="mn" text-anchor="middle">4</text>
+<circle cx="693.6" cy="170.0" r="15" fill="#c8241a"/><text x="693.6" y="175.5" class="mn" text-anchor="middle">5</text>
+<circle cx="724.2" cy="45.9" r="15" fill="#c8241a"/><text x="724.2" y="51.4" class="mn" text-anchor="middle">6</text>
+<circle cx="553.3" cy="593.7" r="15" fill="#c8241a"/><text x="553.3" y="599.2" class="mn" text-anchor="middle">7</text>
+<circle cx="652.8" cy="394.4" r="15" fill="#c8241a"/><text x="652.8" y="399.9" class="mn" text-anchor="middle">8</text>
+<circle cx="266.9" cy="413.1" r="15" fill="#c8241a"/><text x="266.9" y="418.6" class="mn" text-anchor="middle">9</text>
+</svg></div>
+        <ol class="keys">
+          <li><b>1</b><span>Dona Isabel<small>1st Hall, on the veil</small></span></li>
+          <li><b>2</b><span>In&ecirc;s &amp; Clara<small>1st Hall walls</small></span></li>
+          <li><b>3</b><span>Mestre Afonso<small>Behind the DJ</small></span></li>
+          <li><b>4</b><span>The Last Dancers<small>The corridor</small></span></li>
+          <li><b>5</b><span>Bento<small>The smoking area</small></span></li>
+          <li><b>6</b><span>The Lovers<small>The two trees</small></span></li>
+          <li><b>7</b><span>Rosa<small>The well</small></span></li>
+          <li><b>8</b><span>Tia F&aacute;tima<small>The kitchen, closed</small></span></li>
+          <li><b>9</b><span>The Upstairs Guest<small>The stairs, closed</small></span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="room" aria-labelledby="h-night">
+      <span class="eyebrow">V. The night</span>
+      <h3 id="h-night">Friday, the thirtieth of October.</h3>
+      <ol class="night">
+        <li><time>6:00 PM</time><div><h4>The doors open</h4><p>Show your QR at the gate. Bottles you bring are tagged with your name and wait for you at the bar.</p></div></li>
+        <li><time>8:00 PM</time><div><h4>The house wakes up</h4><p>The lights die, a single string note plays, and the house calls its guests by name. It happens three times tonight.</p></div></li>
+        <li><time>9:00 PM</time><div><h4>The house wakes up again</h4><p>Find a ghost before it finds you. Each one waits in its own room.</p></div></li>
+        <li><time>9:45 PM</time><div><h4>The last waking</h4><p>The clock strikes twelve, the year is 1776, and five beams draw a star above the decks.</p></div></li>
+        <li><time>10:00 PM</time><div><h4>The house lowers its voice</h4><p>The neighbours are living. The music softens and the night carries on.</p></div></li>
+        <li><time>12:00 AM</time><div><h4>The ghosts stay. You don&rsquo;t.</h4><p>Music off at midnight. Leave quietly; the street is asleep.</p></div></li>
+      </ol>
+    </section>
+
+
+
+    <section class="room" aria-labelledby="h-rules">
+      <span class="eyebrow">VI. The house rules</span>
+      <h3 id="h-rules">Three rules, kept since 1776.</h3>
+      <div class="rules">
+        <div><strong>Respect the guests</strong><p>Living and otherwise. Spoil the night for others and you leave, and you won&rsquo;t be invited back in this life or the next.</p></div>
+        <div><strong>Smoke only outside</strong><p>Bento keeps a landing for it in the yard. Nowhere else.</p></div>
+        <div><strong>Come dressed</strong><p>For 1776, or for the afterlife. Strobe, lasers and fog run all night; tell us at the gate if that&rsquo;s a problem.</p></div>
+      </div>
+    </section>
+
+    <div class="closing">
+      <p>The ghosts stay.<br>You don&rsquo;t.</p>
+      <div class="logos"><img src="img/ref.png" alt="References" class="lg-ref"><span class="x" aria-hidden="true">&times;</span><img src="img/jinxed.png" alt="Jinxed" class="lg-jx"></div>
+      <span class="mono">Ghost Town &middot; 30.10.2026 &middot; Hosted by Ian Almeida</span>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Paste your Google Apps Script web app URL here (see README.md). It receives a JSON body.
+  // Left empty, the page shows the confirmation and opens the house, but stores nothing.
+  const INVITE_ENDPOINT = "";
+
+  const KEY = "ghosttown.requested";
+  const gate = document.getElementById("gate");
+  const dark = document.getElementById("dark");
+  const dlg = document.getElementById("dlg");
+  const form = document.getElementById("form");
+  const send = document.getElementById("send");
+  const inside = document.getElementById("inside");
+  const doors = document.getElementById("doors");
+  const openBtn = document.getElementById("open");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // The candle: light follows the pointer; on touch screens it drifts on its own.
+  let drifting = true;
+  function setLight(x, y) { dark.style.setProperty("--x", x + "px"); dark.style.setProperty("--y", y + "px"); }
+  gate.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "touch") return;
+    drifting = false;
+    const r = gate.getBoundingClientRect();
+    setLight(e.clientX - r.left, e.clientY - r.top);
+  });
+  gate.addEventListener("pointerleave", () => { drifting = true; });
+  if (!reduce) {
+    const t0 = performance.now();
+    (function drift(now) {
+      if (drifting) {
+        const t = (now - t0) / 1000, w = gate.clientWidth, h = gate.clientHeight;
+        setLight(w * (0.5 + 0.22 * Math.sin(t * 0.35)), h * (0.42 + 0.12 * Math.sin(t * 0.53)));
+      }
+      requestAnimationFrame(drift);
+    })(t0);
+  }
+
+  function readStore() { try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; } }
+  function writeStore() { try { localStorage.setItem(KEY, "1"); } catch (e) {} }
+
+  function openHouse(animate) {
+    inside.hidden = false;
+    openBtn.textContent = "Request sent";
+    openBtn.disabled = true;
+    if (animate) inside.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }
+
+  // ---- Background music: starts on the first tap anywhere (browsers block sound before that) ----
+  const bgm = document.getElementById("bgm"), soundBtn = document.getElementById("sound");
+  const MUTE_KEY = "ghosttown.muted";
+  let userMuted = false;
+  try { userMuted = localStorage.getItem(MUTE_KEY) === "1"; } catch (e) {}
+  bgm.volume = 0.55;
+  function paint() {
+    const playing = !bgm.paused && !bgm.muted;
+    soundBtn.classList.toggle("playing", playing);
+    soundBtn.classList.toggle("muted", !playing);
+    soundBtn.setAttribute("aria-pressed", playing ? "true" : "false");
+    soundBtn.setAttribute("aria-label", playing ? "Mute music" : "Play music");
+  }
+  function startMusic() {
+    if (userMuted) return;
+    bgm.muted = false;
+    const p = bgm.play();
+    if (p && p.catch) p.catch(() => {});
+  }
+  bgm.addEventListener("play", paint); bgm.addEventListener("pause", paint); bgm.addEventListener("volumechange", paint);
+  soundBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const playing = !bgm.paused && !bgm.muted;
+    if (playing) { bgm.pause(); userMuted = true; }
+    else { userMuted = false; startMusic(); }
+    try { localStorage.setItem(MUTE_KEY, userMuted ? "1" : "0"); } catch (e) {}
+    paint();
+  });
+  function firstTouch(e) {
+    if (e.target && e.target.closest && e.target.closest("#sound")) return;
+    startMusic();
+    removeEventListener("pointerdown", firstTouch, true); removeEventListener("keydown", firstTouch, true);
+  }
+  addEventListener("pointerdown", firstTouch, true); addEventListener("keydown", firstTouch, true);
+  startMusic(); // works only where the browser allows autoplay
+  function duck(on) {
+    const target = on ? 0.15 : 0.55, from = bgm.volume, t0 = performance.now();
+    (function step(now) { const k = Math.min(1, (now - t0) / 600); bgm.volume = from + (target - from) * k; if (k < 1) requestAnimationFrame(step); })(t0);
+  }
+
+  // ---- Sound: knocks and a door creak, made in the browser (no files) ----
+  let ctx = null;
+  function audio() {
+    try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === "suspended") ctx.resume(); } catch (e) { ctx = null; }
+    return ctx;
+  }
+  function knock(at) {
+    const c = ctx; if (!c) return;
+    const t = c.currentTime + at;
+    const body = c.createOscillator(), bg = c.createGain();
+    body.type = "sine"; body.frequency.setValueAtTime(140, t); body.frequency.exponentialRampToValueAtTime(55, t + 0.12);
+    bg.gain.setValueAtTime(0.0001, t); bg.gain.exponentialRampToValueAtTime(0.9, t + 0.005); bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    body.connect(bg).connect(c.destination); body.start(t); body.stop(t + 0.25);
+    const len = Math.floor(c.sampleRate * 0.06), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    const n = c.createBufferSource(), f = c.createBiquadFilter(), ng = c.createGain();
+    n.buffer = buf; f.type = "lowpass"; f.frequency.value = 900; ng.gain.value = 0.6;
+    n.connect(f).connect(ng).connect(c.destination); n.start(t);
+  }
+  function creak(at) {
+    const c = ctx; if (!c) return;
+    const t = c.currentTime + at, dur = 1.6;
+    const o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), f = c.createBiquadFilter(), g = c.createGain();
+    o.type = "sawtooth"; o.frequency.setValueAtTime(62, t); o.frequency.linearRampToValueAtTime(48, t + dur);
+    lfo.frequency.value = 9; lg.gain.value = 9; lfo.connect(lg).connect(o.frequency);
+    f.type = "bandpass"; f.frequency.setValueAtTime(700, t); f.frequency.linearRampToValueAtTime(1100, t + dur); f.Q.value = 6;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(f).connect(g).connect(c.destination); o.start(t); lfo.start(t); o.stop(t + dur); lfo.stop(t + dur);
+  }
+
+  // ---- The knock-knock joke ----
+  const JOKES = [
+    ["Boo.", "Boo who?", "Don\u2019t cry. The doors are open."],
+    ["Isabel.", "Isabel who?", "Isabel out of order, so we knocked."],
+    ["Ice cream.", "Ice cream who?", "Ice cream every thirtieth of October."],
+    ["Afonso.", "Afonso who?", "Afonso-ny you showed up. We\u2019ve been waiting since 1776."],
+    ["Tia.", "Tia who?", "Tia-rribly sorry, the kitchen is still closed."]
+  ];
+  const doorsEl = document.getElementById("doors"), joke = document.getElementById("joke"), opened = document.getElementById("opened");
+  let timers = [], finished = true;
+  function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+  function finish() {
+    if (finished) return; finished = true;
+    timers.forEach(clearTimeout); timers = []; duck(false);
+    doorsEl.classList.add("out");
+    setTimeout(() => { doorsEl.hidden = true; doorsEl.classList.remove("out"); openHouse(true); }, reduce ? 0 : 900);
+  }
+  function knockKnock() {
+    const j = JOKES[Math.floor(Math.random() * JOKES.length)];
+    const lines = ["Knock, knock.", "Who\u2019s there?", j[0], j[1], j[2]];
+    lines.forEach((t, i) => { const p = document.getElementById("j" + (i + 1)); p.textContent = t; p.classList.remove("on"); });
+    joke.classList.remove("out"); opened.classList.remove("on");
+    doorsEl.hidden = false; finished = false; duck(true);
+    const shake = () => { if (reduce) return; joke.classList.remove("shake"); void joke.offsetWidth; joke.classList.add("shake"); };
+    knock(0.05); knock(0.28); knock(0.62);
+    at(60, () => { document.getElementById("j1").classList.add("on"); shake(); });
+    at(620, shake);
+    at(1500, () => document.getElementById("j2").classList.add("on"));
+    at(2600, () => document.getElementById("j3").classList.add("on"));
+    at(3700, () => document.getElementById("j4").classList.add("on"));
+    at(4900, () => document.getElementById("j5").classList.add("on"));
+    at(7600, () => { joke.classList.add("out"); creak(0.2); });
+    at(8300, () => opened.classList.add("on"));
+    at(10000, finish);
+  }
+  doorsEl.addEventListener("click", finish);
+  addEventListener("keydown", (e) => { if (!doorsEl.hidden && e.key === "Escape") finish(); });
+
+  if (readStore()) openHouse(false);
+
+  openBtn.addEventListener("click", () => { dlg.showModal(); document.getElementById("f-name").focus(); });
+  document.getElementById("close").addEventListener("click", () => dlg.close());
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+
+  const fields = {
+    name: { el: "f-name", err: "e-name", check: (v) => v.trim().length >= 2 ? "" : "Add your full name." },
+    phone: { el: "f-phone", err: "e-phone", check: (v) => { const d = v.replace(/\D/g, ""); return d.length >= 10 && d.length <= 15 ? "" : "Add a WhatsApp number, with country code if outside India."; } },
+    instagram: { el: "f-ig", err: "e-ig", check: (v) => /^[a-zA-Z0-9._]{1,30}$/.test(v.trim().replace(/^@/, "")) ? "" : "Add your Instagram handle: letters, numbers, dots or underscores." }
+  };
+  function validate(k) {
+    const f = fields[k], el = document.getElementById(f.el), msg = f.check(el.value);
+    document.getElementById(f.err).textContent = msg;
+    el.setAttribute("aria-invalid", msg ? "true" : "false");
+    return !msg;
+  }
+  Object.keys(fields).forEach((k) => {
+    const el = document.getElementById(fields[k].el);
+    el.addEventListener("blur", () => { if (el.value) validate(k); });
+    el.addEventListener("input", () => { if (el.getAttribute("aria-invalid") === "true") validate(k); });
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const ok = Object.keys(fields).map(validate);
+    if (ok.includes(false)) {
+      const bad = Object.keys(fields).find((k) => document.getElementById(fields[k].el).getAttribute("aria-invalid") === "true");
+      document.getElementById(fields[bad].el).focus();
+      return;
+    }
+    const data = {
+      name: document.getElementById("f-name").value.trim(),
+      phone: document.getElementById("f-phone").value.trim(),
+      instagram: document.getElementById("f-ig").value.trim().replace(/^@/, ""),
+      referrer: document.getElementById("f-ref").value.trim(),
+      event: "ghost-town-2026",
+      requestedAt: new Date().toISOString()
+    };
+    const isBot = document.getElementById("f-web").value !== "";
+    audio();
+    send.disabled = true; send.textContent = "Knocking";
+    try {
+      if (INVITE_ENDPOINT && !isBot) {
+        const res = await fetch(INVITE_ENDPOINT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(data) });
+        if (!res.ok) throw new Error("Request failed");
+      }
+      writeStore();
+      dlg.close();
+      knockKnock();
+    } catch (err) {
+      document.getElementById("e-ig").textContent = "Your request didn't reach the house. Check your connection and send it again.";
+    } finally {
+      send.disabled = false; send.textContent = "Knock on the door";
+    }
+  });
+</script>
+
+</body>
+</html>
