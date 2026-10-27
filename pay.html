@@ -107,13 +107,16 @@
   .field input[type=text], .field input[type=tel], .field input[type=email] { width: 100%; padding: 10px 0; background: transparent; border: 0; border-bottom: 1px solid var(--smoke); border-radius: 0; font: 20px var(--f-body); color: var(--bone); }
   .field input:focus { outline: none; border-bottom-color: var(--blood-hi); }
   .field input[aria-invalid="true"] { border-bottom-color: var(--blood-hi); }
-  .drop { position: relative; display: flex; align-items: center; gap: 14px; border: 1.5px dashed var(--smoke); padding: 14px; cursor: pointer; min-height: 84px; }
-  .drop:hover, .drop:focus-within { border-color: var(--bone-dim); }
-  .drop.has { border-style: solid; border-color: var(--ok); }
+  .drop { position: relative; display: flex; align-items: center; gap: 14px; border: 2px dashed var(--blood); background: rgba(200,36,26,.07); padding: 16px; cursor: pointer; min-height: 96px; transition: background .2s, border-color .2s; }
+  .drop:hover, .drop:focus-within { background: rgba(200,36,26,.14); border-color: var(--blood-hi); }
+  .drop.has { border-style: solid; border-color: var(--ok); background: rgba(127,168,138,.08); }
+  .drop .pick { margin-left: auto; flex: none; padding: 10px 14px; background: var(--blood); color: var(--bone); font: 500 11px var(--f-mono); letter-spacing: .16em; text-transform: uppercase; }
+  .drop.has .pick { background: transparent; border: 1px solid var(--ok); color: var(--ok); }
   .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
-  .drop .thumb { width: 52px; height: 52px; flex: none; background: var(--ash) center / cover; border: 1px solid var(--line); }
+  .drop .thumb { width: 56px; height: 56px; flex: none; display: grid; place-items: center; color: var(--blood-hi); background: var(--ash) center / cover; border: 1px solid var(--line); }
+  .drop.has .thumb svg { display: none; }
   .drop .dt { font: italic 16px/1.35 var(--f-body); color: var(--bone-dim); }
-  .drop .dt b { display: block; font: 500 12px var(--f-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--bone); font-style: normal; margin-bottom: 2px; }
+  .drop .dt b { display: block; font: 500 13px var(--f-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--bone); font-style: normal; margin-bottom: 2px; }
   .guests { margin: 6px 0 4px; }
   .guest { border-left: 2px solid var(--line); padding: 4px 0 2px 14px; margin-bottom: 14px; }
   .guest .mono { display: block; margin-bottom: 4px; }
@@ -151,6 +154,8 @@
 
   footer { margin-top: 44px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
   footer .logos { justify-content: center; }
+  footer .help { margin: 0; font: italic 16px/1.6 var(--f-body); color: var(--bone-dim); }
+  footer .help a { color: var(--bone); white-space: nowrap; }
   .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--bone); color: var(--night); font: 500 12px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; padding: 10px 16px; opacity: 0; transition: opacity .25s; pointer-events: none; }
   .toast.on { opacity: 1; }
   @media (max-width: 400px) { .qrbox { grid-template-columns: 1fr; justify-items: center; } .qrside { text-align: center; align-items: center; } .two { grid-template-columns: 1fr; } }
@@ -223,11 +228,12 @@
       <p class="lead">We check every payment by hand. Your pass comes on WhatsApp once it clears.</p>
       <form id="form" novalidate>
         <label class="field">
-          <span class="mono">Payment screenshot</span>
+          <span class="mono">Payment screenshot <span class="red">&middot; needed</span></span>
           <span class="drop" id="drop">
-            <span class="thumb" id="thumb"></span>
-            <span class="dt" id="dropText"><b>Add screenshot</b>The success screen from your UPI app</span>
-            <input type="file" id="shot" accept="image/*">
+            <span class="thumb" id="thumb"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 16V4m0 0-5 5m5-5 5 5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg></span>
+            <span class="dt" id="dropText"><b>Upload screenshot</b>The success screen from your UPI app</span>
+            <span class="pick" id="pick" aria-hidden="true">Choose</span>
+            <input type="file" id="shot" accept="image/*" aria-describedby="dropText">
           </span>
         </label>
         <label class="field">
@@ -271,6 +277,7 @@
 
   <footer>
     <div class="logos"><img class="lg-ref" src="img/ref.png" alt="References"><span class="x">&times;</span><img class="lg-jx" src="img/jinxed.png" alt="Jinxed"></div>
+    <p class="help">Stuck? WhatsApp or call <a href="tel:+919819196888">+91 98191 96888</a><br>or email <a href="mailto:ian@jinxednetwork.com">ian@jinxednetwork.com</a></p>
     <span class="mono">Hosted by Ian Almeida</span>
     <a class="mono" href="./" style="text-decoration:none">&larr; Back to the house</a>
   </footer>
@@ -300,7 +307,8 @@ const TIERS = [
 const MAX_PASSES = 4;
 
 // WhatsApp number guests can message with problems (digits only, with country code). Leave "" to say "reply to our message".
-const HELP_WHATSAPP = "";
+const HELP_WHATSAPP = "919819196888";
+const HELP_EMAIL = "ian@jinxednetwork.com";
 
 // Supabase (same project as the invite requests).
 const SUPABASE_URL = "https://gwwiljdhsojlpdsqqxab.supabase.co";
@@ -315,6 +323,9 @@ const store = {
   get(k) { try { return JSON.parse(localStorage.getItem("gt.pay." + k)); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem("gt.pay." + k, JSON.stringify(v)); } catch (e) {} },
 };
+// Random token this browser keeps; only its hash goes to the database. It's what lets this phone see its own pass.
+const token = store.get("token") || (() => { const t = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join(""); store.set("token", t); return t; })();
+const sha256 = async (t) => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t))), (b) => b.toString(16).padStart(2, "0")).join("");
 const inr = (n) => "₹" + n.toLocaleString("en-IN");
 const digits = (s) => (s || "").replace(/\D/g, "");
 
@@ -479,7 +490,8 @@ $("shot").addEventListener("change", async () => {
     $("thumb").style.backgroundImage = "url(" + url + ")";
   } catch (e) { /* keep the original file */ }
   $("drop").classList.add("has");
-  $("dropText").innerHTML = "<b>Screenshot added</b>Tap to change it";
+  $("dropText").innerHTML = "<b>Screenshot added</b>" + (f.name || "Your screenshot").slice(0, 40);
+  $("pick").textContent = "Change";
 });
 
 function fail(msg, el) { $("err").textContent = msg; if (el) { el.setAttribute("aria-invalid", "true"); el.focus(); } }
@@ -495,7 +507,7 @@ $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   if ($("website").value) return;
   const name = $("name").value.trim(), phone = $("phone").value.trim(), utr = digits($("utr").value);
-  if (!shotBlob && !utr) return fail("Add the screenshot, or type the 12-digit UPI reference.", $("utr"));
+  if (!shotBlob && !utr) { fail("Upload your payment screenshot first (or type the 12-digit UPI reference)."); $("drop").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
   if (utr && (utr.length < 12 || utr.length > 22)) return fail("The UPI reference is usually 12 digits.", $("utr"));
   if (!name) return fail("Your name, please.", $("name"));
   if (digits(phone).length < 10) return fail("Your WhatsApp number, please.", $("phone"));
@@ -525,7 +537,7 @@ $("form").addEventListener("submit", async (e) => {
       }
       await sb("/rest/v1/payments", {
         method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
-        body: JSON.stringify({ guest_no: guestNo, code, name, phone, passes: qty, price_each: price, amount: price * qty, upi_to: acct.vpa, utr: utr || null, proof_path: proofPath, guests }),
+        body: JSON.stringify({ guest_no: guestNo, code, name, phone, passes: qty, price_each: price, amount: price * qty, upi_to: acct.vpa, utr: utr || null, proof_path: proofPath, guests, lookup_hash: await sha256(token) }),
       });
     }
     $("flow").hidden = true; $("done").hidden = false;
@@ -547,10 +559,10 @@ async function checkStatus(quiet) {
   try {
     let rows;
     if (PREVIEW) rows = store.get("sent") ? [{ status: "Pending", passes: store.get("sent").qty, code, name: firstName || "Guest" }] : [];
-    else rows = await (await sb("/rest/v1/rpc/pass_status", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_phone: p }) })).json();
+    else rows = await (await sb("/rest/v1/rpc/pass_status", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_phone: p, p_token: token }) })).json();
     store.set("phone", $("sPhone").value);
     const box = $("pass"); box.textContent = "";
-    if (!rows.length) { box.hidden = true; $("sErr").textContent = quiet ? "" : "Nothing under that number yet."; return; }
+    if (!rows.length) { box.hidden = true; $("sErr").textContent = quiet ? "" : store.get("sent") ? "Nothing under that number yet." : "Nothing here yet. Check on the phone you paid from; your pass also comes on WhatsApp."; return; }
     $("sErr").textContent = "";
     const r = rows[0];
     const paid = r.status === "Paid";
@@ -566,7 +578,7 @@ $("sCheck").onclick = () => checkStatus(false);
 $("sPhone").addEventListener("keydown", (e) => { if (e.key === "Enter") checkStatus(false); });
 
 // FAQ
-const help = HELP_WHATSAPP ? 'message us on <a href="https://wa.me/' + HELP_WHATSAPP + '">WhatsApp</a>' : "reply to our WhatsApp message";
+const help = 'message us on <a href="https://wa.me/' + HELP_WHATSAPP + '">WhatsApp</a> or email <a href="mailto:' + HELP_EMAIL + '">' + HELP_EMAIL + '</a>';
 const FAQ = [
   ["How many passes can I buy?", "<p>Up to four: yours and three more. Every name on your passes follows the same terms. Costume compulsory, valid photo ID, right of admission reserved. You answer for them at the door.</p>"],
   ["Why does the price go up?", "<p>The house is small and the list is long. The earlier you pay, the less it costs. The price you see when you pay is the price you get, even if it rises while you&rsquo;re paying.</p>"],
@@ -576,6 +588,7 @@ const FAQ = [
   ["When do I get my pass?", "<p>We check every payment by hand against our account, usually within a few hours. You&rsquo;ll get a WhatsApp from us, and step V on this page will show your pass. The address goes out on the 29th to paid guests only.</p>"],
   ["I paid the wrong amount, or paid twice.", "<p>Don&rsquo;t worry. Add your screenshot here anyway and " + help + ". We&rsquo;ll sort it.</p>"],
   ["What&rsquo;s included?", "<p>Entry from dusk till midnight, six DJs, and a Mama&rsquo;s Jamba Juice with every pass.</p>"],
+  ["Something isn&rsquo;t working.", "<p>WhatsApp or call <a href=\"tel:+919819196888\">+91 98191 96888</a>, or email <a href=\"mailto:ian@jinxednetwork.com\">ian@jinxednetwork.com</a>. Send your screenshot along and we&rsquo;ll sort it out.</p>"],
   ["Can I change a name on my passes?", "<p>Yes, before the 29th. Just " + help + ".</p>"],
 ];
 $("faq").innerHTML = FAQ.map(([q, a]) => "<details><summary>" + q + "</summary><div class=\"a\">" + a + "</div></details>").join("");
