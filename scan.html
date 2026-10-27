@@ -92,6 +92,7 @@ const buzz = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (
 async function door(pass, admit) {
   const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/door_check", { method: "POST", headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_key: doorKey, p_pass: pass, p_admit: admit || 0 }) });
   if (res.status === 403) throw new Error("key");
+  if (res.status === 400 && (await res.clone().text()).includes("ambiguous")) throw new Error("ambiguous");
   if (!res.ok) throw new Error(res.status);
   return (await res.json())[0] || null;
 }
@@ -141,7 +142,9 @@ async function admit(pass, n) {
 
 function handleErr(e) {
   console.error(e);
-  $("msg").textContent = e.message === "key" ? "This door link no longer works. Ask Ian for a new one." : "No connection. Try again, or use the code box.";
+  $("msg").textContent = e.message === "key" ? "This door link no longer works. Ask Ian for a new one."
+    : e.message === "ambiguous" ? "That code belongs to more than one booking. Scan their QR instead."
+    : "No connection. Try again, or use the code box.";
   buzz([80, 60, 80]);
 }
 
