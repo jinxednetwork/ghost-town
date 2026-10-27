@@ -585,8 +585,16 @@ async function checkStatus(quiet) {
     const lab = document.createElement("div"); lab.className = "mono " + (paid ? "red" : ""); lab.textContent = paid ? "Admit" : r.status === "Pending" ? "Being checked" : r.status;
     const c = document.createElement("div"); c.className = "code"; c.textContent = r.code || code;
     const w = document.createElement("div"); w.className = "who"; w.textContent = r.name || "";
-    const n = document.createElement("div"); n.className = "cnt"; n.textContent = paid ? r.passes + (r.passes === 1 ? " entry" : " entries") + ". Show this at the door with photo ID." : "We haven't matched your payment yet. It usually takes a few hours.";
-    box.append(lab, c, w, n); box.hidden = false;
+    const n = document.createElement("div"); n.className = "cnt"; n.textContent = paid ? r.passes + (r.passes === 1 ? " entry" : " entries") + ". Open your pass below and show its QR at the door." : "We haven't matched your payment yet. It usually takes a few hours.";
+    box.append(lab, c, w, n);
+    // Each paid booking has its own pass with the entry QR.
+    for (const row of rows.filter((x) => x.pass_token)) {
+      const go = document.createElement("a"); go.className = "btn"; go.href = "pass.html#" + row.pass_token;
+      go.textContent = rows.filter((x) => x.pass_token).length > 1 ? "Open pass " + row.code : "Open your pass (QR)";
+      go.style.cssText = "margin-top:14px;width:100%;background:var(--blood);border-color:var(--blood)";
+      box.append(go);
+    }
+    box.hidden = false;
   } catch (err) { console.error(err); if (!quiet) $("sErr").textContent = "Couldn't check right now. Try again in a minute."; }
 }
 $("sCheck").onclick = () => checkStatus(false);

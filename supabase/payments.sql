@@ -52,29 +52,86 @@ drop trigger if exists payments_set_price on public.payments;
 create trigger payments_set_price before insert on public.payments
   for each row execute function public.payments_set_price();
 
--- A guest checks their own pass with the phone number plus a random token their browser made when
+-- Passes and the door. Every booking gets an unguessable pass_token (the QR on the pass);
+-- checked_in counts how many of its passes have walked in.
+alter table public.payments add column if not exists pass_token uuid not null default gen_random_uuid() unique;
+alter table public.payments add column if not exists checked_in int not null default 0;
+alter table public.payments add column if not exists checked_in_at timestamptz;
+
+-- A guest checks their own bookings with the phone number plus a random token their browser made when
 -- they paid (only its hash is stored). Knowing someone's number alone shows nothing.
--- Code, name and passes come only from rows you've marked Paid, so a pending row can't fake a pass.
+-- Code, name, passes and the pass link come only from rows you've marked Paid, so a pending row can't fake a pass.
 drop function if exists public.pass_status(text);
-create or replace function public.pass_status(p_phone text, p_token text)
-returns table (code text, name text, passes int, status text)
+drop function if exists public.pass_status(text, text);
+create function public.pass_status(p_phone text, p_token text)
+returns table (code text, name text, passes int, status text, pass_token uuid)
 language sql stable security definer set search_path = public as $$
-  select min(p.code) filter (where p.status = 'Paid'),
-         min(p.name) filter (where p.status = 'Paid'),
-         (sum(p.passes) filter (where p.status = 'Paid'))::int,
-         case when bool_or(p.status = 'Paid') then 'Paid'
-              when bool_or(p.status = 'Pending') then 'Pending'
-              else min(p.status) end
+  select case when p.status = 'Paid' then p.code end,
+         case when p.status = 'Paid' then p.name end,
+         case when p.status = 'Paid' then p.passes end,
+         p.status,
+         case when p.status = 'Paid' then p.pass_token end
   from public.payments p
   where length(regexp_replace(p_phone, '\D', '', 'g')) >= 10
     and right(regexp_replace(p.phone, '\D', '', 'g'), 10) = right(regexp_replace(p_phone, '\D', '', 'g'), 10)
     and length(coalesce(p_token, '')) >= 32
     and p.lookup_hash = encode(sha256(convert_to(p_token, 'UTF8')), 'hex')
     and p.status <> 'Declined'
-  having count(*) > 0;
+  order by (p.status = 'Paid') desc, p.id;
 $$;
 revoke all on function public.pass_status(text, text) from public;
 grant execute on function public.pass_status(text, text) to anon;
+
+-- The pass page (pass.html#<pass_token>). Whoever holds the link sees the pass, nothing more.
+create or replace function public.get_pass(p_pass uuid)
+returns table (code text, name text, guests text[], passes int, checked_in int, status text)
+language sql stable security definer set search_path = public as $$
+  select case when p.status = 'Paid' then p.code end,
+         case when p.status = 'Paid' then p.name end,
+         case when p.status = 'Paid' then array(select g->>'name' from jsonb_array_elements(p.guests) g) end,
+         case when p.status = 'Paid' then p.passes end,
+         case when p.status = 'Paid' then p.checked_in end,
+         p.status
+  from public.payments p
+  where p.pass_token = p_pass and p.status <> 'Declined';
+$$;
+revoke all on function public.get_pass(uuid) from public;
+grant execute on function public.get_pass(uuid) to anon;
+
+-- Door staff. The scanner holds a door key; only its hash lives here. No policies, so the page can't read it.
+create table if not exists public.door_keys (
+  key_hash text primary key check (key_hash ~ '^[0-9a-f]{64}$'),
+  label    text,
+  created  timestamptz not null default now()
+);
+alter table public.door_keys enable row level security;
+revoke all on public.door_keys from anon, authenticated;
+
+-- Look up a pass by its QR token or its code (GT-105), and optionally admit p_admit people.
+-- Never admits more than the booking paid for, even if two doors scan at once.
+create or replace function public.door_check(p_key text, p_pass text, p_admit int default 0)
+returns table (code text, name text, guests text[], passes int, checked_in int, status text, checked_in_at timestamptz)
+language plpgsql volatile security definer set search_path = public as $$
+#variable_conflict use_column
+declare v_id bigint;
+begin
+  if not exists (select 1 from door_keys k where k.key_hash = encode(sha256(convert_to(coalesce(p_key, ''), 'UTF8')), 'hex')) then
+    raise exception 'bad door key' using errcode = '28000';
+  end if;
+  select p.id into v_id from payments p
+  where (p.pass_token::text = lower(trim(p_pass)) or upper(p.code) = upper(trim(p_pass))) and p.status <> 'Declined'
+  order by (p.status = 'Paid') desc, p.id limit 1;
+  if v_id is not null and coalesce(p_admit, 0) > 0 then
+    update payments p set checked_in = p.checked_in + least(p_admit, p.passes - p.checked_in), checked_in_at = now()
+    where p.id = v_id and p.status = 'Paid' and p.checked_in < p.passes;
+  end if;
+  return query
+    select p.code, p.name, array(select g->>'name' from jsonb_array_elements(p.guests) g),
+           p.passes, p.checked_in, p.status, p.checked_in_at
+    from payments p where p.id = v_id;
+end $$;
+revoke all on function public.door_check(text, text, int) from public;
+grant execute on function public.door_check(text, text, int) to anon;
 
 -- Private bucket for payment screenshots (8 MB max, images only). Guests can upload, never list or read.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -98,4 +155,9 @@ create or replace view public.door_list with (security_invoker = true) as
   select p.code, g->>'name', g->>'phone', 'guest of ' || p.name
   from public.payments p cross join lateral jsonb_array_elements(p.guests) g where p.status = 'Paid'
   order by 1, 4;
-revoke all on public.payments_to_check, public.door_list from anon, authenticated;
+-- Paid bookings with the link to send each guest on WhatsApp, and how many have arrived.
+create or replace view public.pass_links with (security_invoker = true) as
+  select p.code, p.name, p.phone, p.passes, p.checked_in,
+         'https://jinxednetwork.github.io/ghost-town/pass.html#' || p.pass_token as pass_link
+  from public.payments p where p.status = 'Paid' order by p.received;
+revoke all on public.payments_to_check, public.door_list, public.pass_links from anon, authenticated;

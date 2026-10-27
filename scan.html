@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070707">
+<meta name="robots" content="noindex">
+<title>Ghost Town Door</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Door scanner. Opened once with scan.html#key=<door key>; the key is then kept on this phone. */
+  :root {
+    --night: #070707; --ash: #141312; --bone: #ece8e1; --bone-dim: #a39d94; --smoke: #6f6a63; --line: #2c2926;
+    --blood: #c8241a; --blood-hi: #e2352a; --ok: #3f9a5c; --warn: #c98a1a;
+    --f-black: "UnifrakturMaguntia", serif; --f-body: "IM Fell English", Georgia, serif; --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; background: var(--night); color: var(--bone); font: 18px/1.5 var(--f-body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top, 0px)) 16px calc(32px + env(safe-area-inset-bottom, 0px)); }
+  .mono { font: 400 12px/1.6 var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--bone-dim); }
+  .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .top b { font: 400 34px/1 var(--f-black); }
+  .cam { position: relative; margin-top: 14px; aspect-ratio: 1; background: var(--ash); border: 1px solid var(--line); overflow: hidden; }
+  .cam video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam .frame { position: absolute; inset: 16%; border: 3px solid rgba(236,232,225,.85); border-radius: 8px; pointer-events: none; }
+  .cam .idle { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center; }
+  .btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 58px; padding: 0 14px; border: 1px solid var(--line); background: var(--ash); color: var(--bone); font: 500 14px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; cursor: pointer; }
+  .btn.main { background: var(--blood); border-color: var(--blood); }
+  .btn.go { background: var(--ok); border-color: var(--ok); color: #fff; font-size: 16px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .manual { display: flex; gap: 10px; margin-top: 14px; }
+  .manual input { flex: 1; min-width: 0; padding: 0 12px; min-height: 54px; background: transparent; border: 1px solid var(--line); color: var(--bone); font: 500 18px var(--f-mono); text-transform: uppercase; }
+  .manual .btn { width: auto; }
+  .card { margin-top: 14px; padding: 20px 18px; border: 3px solid; text-align: center; }
+  .card.ok { border-color: var(--ok); background: rgba(63,154,92,.12); }
+  .card.warn { border-color: var(--warn); background: rgba(201,138,26,.12); }
+  .card.bad { border-color: var(--blood-hi); background: rgba(200,36,26,.14); }
+  .verdict { font: 500 28px/1.15 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; }
+  .ok .verdict { color: #7fdc9b; } .warn .verdict { color: #f0b54a; } .bad .verdict { color: #ff6a5f; }
+  .code { margin-top: 10px; font: 500 34px/1 var(--f-mono); }
+  .who { margin-top: 6px; font: 400 24px/1.25 var(--f-body); }
+  .with { margin-top: 4px; font: italic 18px/1.4 var(--f-body); color: #d6d1c9; }
+  .count { margin-top: 10px; }
+  .msg { margin: 12px 0 0; font: italic 18px/1.5 var(--f-body); color: #d6d1c9; text-align: center; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><b>Ghost Town</b><span class="mono">Door</span></div>
+
+  <div id="nokey" hidden>
+    <p class="msg">This phone isn't set up as a door scanner. Open the door link Ian sent you.</p>
+  </div>
+
+  <div id="app" hidden>
+    <div class="cam">
+      <video id="video" playsinline muted></video>
+      <div class="frame" id="frame" hidden></div>
+      <div class="idle" id="idle"><button class="btn main" type="button" id="start">Start scanning</button></div>
+    </div>
+
+    <div class="card" id="card" hidden></div>
+
+    <form class="manual" id="manual">
+      <input id="code" placeholder="GT-105" autocomplete="off" autocapitalize="characters" aria-label="Pass code">
+      <button class="btn" type="submit">Look up</button>
+    </form>
+    <p class="msg" id="msg"></p>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" integrity="sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx" crossorigin="anonymous"></script>
+<script>
+const SUPABASE_URL = "https://gwwiljdhsojlpdsqqxab.supabase.co";
+const SUPABASE_KEY = "sb_publishable_D5U449KkkGPhjupJ0s5Yfw_wiqGKCD0";
+const $ = (id) => document.getElementById(id);
+
+// Door key: arrives in the link once, then lives on this phone only.
+const m = location.hash.match(/key=([0-9a-f]{32})/);
+if (m) { try { localStorage.setItem("gt.door.key", m[1]); } catch (e) {} history.replaceState(null, "", location.pathname); }
+let doorKey = m ? m[1] : null;
+try { doorKey = doorKey || localStorage.getItem("gt.door.key"); } catch (e) {}
+$(doorKey ? "app" : "nokey").hidden = false;
+
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const buzz = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+
+async function door(pass, admit) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/door_check", { method: "POST", headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_key: doorKey, p_pass: pass, p_admit: admit || 0 }) });
+  if (res.status === 403) throw new Error("key");
+  if (!res.ok) throw new Error(res.status);
+  return (await res.json())[0] || null;
+}
+
+function show(kind, verdict, p, buttons) {
+  const c = $("card"); c.className = "card " + kind; c.textContent = ""; c.hidden = false;
+  c.append(el("div", "verdict", verdict));
+  if (p && p.code) {
+    c.append(el("div", "code", p.code), el("div", "who", p.name));
+    if (p.guests && p.guests.length) c.append(el("div", "with", "with " + p.guests.join(", ")));
+    c.append(el("div", "mono count", p.checked_in + " of " + p.passes + " inside" + (p.checked_in_at ? " · last at " + new Date(p.checked_in_at).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }) : "")));
+  }
+  for (const b of buttons || []) c.append(b);
+  const next = el("button", "btn", "Scan next"); next.type = "button"; next.style.marginTop = "10px"; next.onclick = resume; c.append(next);
+  c.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function check(pass) {
+  $("msg").textContent = "Checking";
+  try {
+    const p = await door(pass);
+    $("msg").textContent = "";
+    if (!p) { buzz([80, 60, 80]); return show("bad", "Not a valid pass"); }
+    if (p.status !== "Paid") { buzz([80, 60, 80]); return show("bad", "Not paid (" + p.status + ")", p); }
+    const left = p.passes - p.checked_in;
+    if (left <= 0) { buzz([80, 60, 80]); return show("warn", "Already inside", p); }
+    buzz(120);
+    const one = el("button", "btn go", "Admit 1"); one.type = "button";
+    const all = el("button", "btn go", "Admit all " + left); all.type = "button";
+    one.onclick = () => admit(pass, 1); all.onclick = () => admit(pass, left);
+    const row = el("div", "row"); row.append(one);
+    if (left > 1) row.append(all); else row.style.gridTemplateColumns = "1fr";
+    show("ok", "Valid · " + left + " to admit", p, [row]);
+  } catch (e) { handleErr(e); }
+}
+
+async function admit(pass, n) {
+  try {
+    const p = await door(pass, n);
+    buzz(200);
+    const left = p.passes - p.checked_in;
+    show("ok", "Admitted" + (left ? " · " + left + " still to come" : ""), p);
+    setTimeout(() => { if (!$("card").hidden && $("card").querySelector(".verdict").textContent.startsWith("Admitted")) resume(); }, 2500);
+  } catch (e) { handleErr(e); }
+}
+
+function handleErr(e) {
+  console.error(e);
+  $("msg").textContent = e.message === "key" ? "This door link no longer works. Ask Ian for a new one." : "No connection. Try again, or use the code box.";
+  buzz([80, 60, 80]);
+}
+
+// Camera + jsQR. Scans a downscaled frame a few times a second.
+const video = $("video"), canvas = document.createElement("canvas"), ctx = canvas.getContext("2d", { willReadFrequently: true });
+let scanning = false, lastText = "", lastAt = 0;
+
+$("start").onclick = async () => {
+  try {
+    video.srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    await video.play();
+    $("idle").hidden = true; $("frame").hidden = false; scanning = true; tick();
+  } catch (e) { console.error(e); $("msg").textContent = "Camera blocked. Allow camera access for this site, or type the code below."; }
+};
+
+function tick() {
+  if (!scanning) return;
+  if (video.readyState >= 2) {
+    const k = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight));
+    canvas.width = Math.round(video.videoWidth * k); canvas.height = Math.round(video.videoHeight * k);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const q = jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
+    if (q && q.data && !(q.data === lastText && Date.now() - lastAt < 4000)) {
+      lastText = q.data; lastAt = Date.now();
+      const t = q.data.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+      scanning = false; $("frame").hidden = true;
+      if (t) check(t[0]); else { buzz([80, 60, 80]); show("bad", "Not a Ghost Town pass"); }
+      return;
+    }
+  }
+  setTimeout(() => requestAnimationFrame(tick), 120);
+}
+
+function resume() {
+  $("card").hidden = true; $("msg").textContent = "";
+  if (video.srcObject) { scanning = true; $("frame").hidden = false; lastText = ""; tick(); }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+$("manual").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = $("code").value.trim(); if (!v) return;
+  scanning = false; $("frame").hidden = true; check(v); $("code").blur();
+});
+</script>
+</body>
+</html>
