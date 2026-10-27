@@ -108,7 +108,7 @@ function render(p) {
   box.append(el("div", "admit", "Admit " + p.passes), img, el("div", "code", p.code), el("div", "who", p.name));
   if (p.guests && p.guests.length) box.append(el("div", "with", "with " + p.guests.join(", ")));
   if (p.checked_in) box.append(el("div", "mono inside red", p.checked_in + " of " + p.passes + " already inside"));
-  box.append(el("p", "rules", "Show this at the door with photo ID. Costume compulsory. One scan admits everyone on it."));
+  box.append(el("p", "rules", "Show this at the door with photo ID. Costume compulsory. One QR covers everyone on it."));
   $("acts").hidden = false;
 
   // Image for the gallery: same pass on a dark card.

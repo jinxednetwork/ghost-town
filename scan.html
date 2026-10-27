@@ -31,7 +31,7 @@
   .btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 58px; padding: 0 14px; border: 1px solid var(--line); background: var(--ash); color: var(--bone); font: 500 14px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; cursor: pointer; }
   .btn.main { background: var(--blood); border-color: var(--blood); }
   .btn.go { background: var(--ok); border-color: var(--ok); color: #fff; font-size: 16px; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .row { display: grid; gap: 10px; margin-top: 14px; }
   .manual { display: flex; gap: 10px; margin-top: 14px; }
   .manual input { flex: 1; min-width: 0; padding: 0 12px; min-height: 54px; background: transparent; border: 1px solid var(--line); color: var(--bone); font: 500 18px var(--f-mono); text-transform: uppercase; }
   .manual .btn { width: auto; }
@@ -57,7 +57,7 @@
   </div>
 
   <div id="app" hidden>
-    <div class="cam">
+    <div class="cam" id="cam">
       <video id="video" playsinline muted></video>
       <div class="frame" id="frame" hidden></div>
       <div class="idle" id="idle"><button class="btn main" type="button" id="start">Start scanning</button></div>
@@ -97,7 +97,7 @@ async function door(pass, admit) {
 }
 
 function show(kind, verdict, p, buttons) {
-  const c = $("card"); c.className = "card " + kind; c.textContent = ""; c.hidden = false;
+  const c = $("card"); c.className = "card " + kind; c.textContent = ""; c.hidden = false; $("cam").hidden = true;
   c.append(el("div", "verdict", verdict));
   if (p && p.code) {
     c.append(el("div", "code", p.code), el("div", "who", p.name));
@@ -106,7 +106,7 @@ function show(kind, verdict, p, buttons) {
   }
   for (const b of buttons || []) c.append(b);
   const next = el("button", "btn", "Scan next"); next.type = "button"; next.style.marginTop = "10px"; next.onclick = resume; c.append(next);
-  c.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  window.scrollTo({ top: 0 });
 }
 
 async function check(pass) {
@@ -122,8 +122,9 @@ async function check(pass) {
     const one = el("button", "btn go", "Admit 1"); one.type = "button";
     const all = el("button", "btn go", "Admit all " + left); all.type = "button";
     one.onclick = () => admit(pass, 1); all.onclick = () => admit(pass, left);
-    const row = el("div", "row"); row.append(one);
-    if (left > 1) row.append(all); else row.style.gridTemplateColumns = "1fr";
+    const row = el("div", "row");
+    if (left > 1) row.append(all);
+    row.append(one);
     show("ok", "Valid · " + left + " to admit", p, [row]);
   } catch (e) { handleErr(e); }
 }
@@ -175,7 +176,7 @@ function tick() {
 }
 
 function resume() {
-  $("card").hidden = true; $("msg").textContent = "";
+  $("card").hidden = true; $("cam").hidden = false; $("msg").textContent = "";
   if (video.srcObject) { scanning = true; $("frame").hidden = false; lastText = ""; tick(); }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
