@@ -117,6 +117,8 @@
   .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
   .drop .thumb { width: 56px; height: 56px; flex: none; display: grid; place-items: center; color: var(--blood-hi); background: var(--ash) center / cover; border: 1px solid var(--line); }
   .drop.has .thumb svg { display: none; }
+  .paste-hint { display: none; }
+  @media (hover: hover) and (pointer: fine) { .paste-hint { display: inline; } }
   .drop .dt { font: italic 16px/1.35 var(--f-body); color: var(--bone-dim); }
   .drop .dt b { display: block; font: 500 13px var(--f-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--bone); font-style: normal; margin-bottom: 2px; }
   .guests { margin: 6px 0 4px; }
@@ -234,7 +236,7 @@
           <span class="mono">Payment screenshot <span class="red">&middot; needed</span></span>
           <span class="drop" id="drop">
             <span class="thumb" id="thumb"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 16V4m0 0-5 5m5-5 5 5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg></span>
-            <span class="dt" id="dropText"><b>Upload screenshot</b>The success screen from your UPI app</span>
+            <span class="dt" id="dropText"><b>Upload screenshot</b>The success screen from your UPI app<span class="paste-hint"> &middot; or copy it and paste here with &#8984;V / Ctrl+V</span></span>
             <span class="pick" id="pick" aria-hidden="true">Choose</span>
             <input type="file" id="shot" accept="image/*" aria-describedby="dropText">
           </span>
@@ -478,10 +480,18 @@ $("saveQr").onclick = () => {
   toast("Saved to downloads");
 };
 
-// Screenshot picker: shrink before upload
+// Screenshot picker: shrink before upload. Also takes a pasted image (copy on phone, Cmd/Ctrl+V on laptop).
 let shotBlob = null;
-$("shot").addEventListener("change", async () => {
-  const f = $("shot").files[0]; if (!f) return;
+$("shot").addEventListener("change", () => { const f = $("shot").files[0]; if (f) useShot(f); });
+document.addEventListener("paste", (e) => {
+  const f = Array.from((e.clipboardData && e.clipboardData.files) || []).find((x) => x.type.startsWith("image/"));
+  if (!f) return; // plain text pastes behave as usual
+  e.preventDefault();
+  useShot(f, true);
+  $("drop").scrollIntoView({ behavior: "smooth", block: "center" });
+  toast("Screenshot pasted");
+});
+async function useShot(f, pasted) {
   shotBlob = f;
   try {
     const url = URL.createObjectURL(f);
@@ -493,9 +503,11 @@ $("shot").addEventListener("change", async () => {
     $("thumb").style.backgroundImage = "url(" + url + ")";
   } catch (e) { /* keep the original file */ }
   $("drop").classList.add("has");
-  $("dropText").innerHTML = "<b>Screenshot added</b>" + (f.name || "Your screenshot").slice(0, 40);
+  const b = document.createElement("b"); b.textContent = pasted ? "Screenshot pasted" : "Screenshot added";
+  $("dropText").replaceChildren(b, pasted ? "From your clipboard" : (f.name || "Your screenshot").slice(0, 40));
   $("pick").textContent = "Change";
-});
+  $("err").textContent = "";
+}
 
 function fail(msg, el) { $("err").textContent = msg; if (el) { el.setAttribute("aria-invalid", "true"); el.focus(); } }
 $("form").addEventListener("input", (e) => { e.target.removeAttribute("aria-invalid"); $("err").textContent = ""; });
