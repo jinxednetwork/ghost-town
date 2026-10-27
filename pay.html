@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Passes for Ghost Town. Friday 30 October, dusk till midnight.">
+<meta name="theme-color" content="#070707">
+<meta name="robots" content="noindex">
+<meta property="og:title" content="Ghost Town: your passes">
+<meta property="og:description" content="The door is open to guests on the list. Passes from ₹800.">
+<meta property="og:image" content="https://jinxednetwork.github.io/ghost-town/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<title>Ghost Town Passes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: one narrow column you move down: price, how many, pay, prove it, then your pass. FAQ underneath. Single dark look by choice, matching the invite page. */
+  :root {
+    --night: #070707; --ash: #141312; --ash2: #1b1918; --bone: #ece8e1; --bone-dim: #a39d94; --smoke: #6f6a63; --line: #2c2926;
+    --blood: #c8241a; --blood-hi: #e2352a; --ok: #7fa88a;
+    --f-black: "UnifrakturMaguntia", "Old English Text MT", "Luminari", serif;
+    --f-body: "IM Fell English", "Iowan Old Style", Georgia, serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { background: var(--night); -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--night); color: var(--bone); font: 18px/1.5 var(--f-body); -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--blood); color: var(--bone); }
+  .grain { position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: .45; background: url(img/grain.png); }
+  .wrap { max-width: 560px; margin: 0 auto; padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(56px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+  .mono { font: 400 12px/1.6 var(--f-mono); letter-spacing: .22em; text-transform: uppercase; color: var(--bone-dim); }
+  .red { color: var(--blood-hi); }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--blood-hi); outline-offset: 3px; }
+  a { color: var(--bone); }
+
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .logos { display: flex; align-items: center; gap: 10px; opacity: .72; }
+  .logos img { width: auto; } .lg-ref { height: 26px; } .lg-jx { height: 18px; }
+  .x { font: 400 12px var(--f-mono); color: var(--smoke); }
+  header.title { text-align: center; padding: 36px 0 8px; }
+  h1 { margin: 0; font: 400 clamp(68px, 19vw, 104px)/.9 var(--f-black); color: #f2eee8; }
+  .sub { margin-top: 10px; letter-spacing: .44em; }
+  .rule { width: 64px; height: 2px; background: var(--blood); margin: 20px auto 0; }
+  .hello { margin: 22px auto 0; max-width: 30ch; font: italic 21px/1.4 var(--f-body); color: #d6d1c9; text-align: center; }
+  .hello b { font-style: normal; font-weight: 400; color: var(--bone); }
+
+  .warn { margin: 22px 0 0; border: 1.5px solid var(--blood); padding: 12px 14px; font: 13px/1.5 var(--f-mono); color: var(--blood-hi); }
+
+  section.step { margin-top: 30px; border-top: 1px solid var(--line); padding-top: 22px; }
+  .step-h { display: flex; align-items: baseline; gap: 12px; margin: 0 0 14px; }
+  .step-h .n { font: 500 12px var(--f-mono); color: var(--blood-hi); letter-spacing: .2em; }
+  .step-h h2 { margin: 0; font: 400 26px/1.15 var(--f-body); }
+  .lead { margin: -4px 0 16px; font: italic 16px/1.5 var(--f-body); color: var(--bone-dim); }
+
+  /* price ladder */
+  .ladder { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); }
+  .ladder li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); color: var(--smoke); }
+  .ladder li:first-child { border-top: 0; }
+  .ladder .when { font: 400 13px var(--f-mono); letter-spacing: .08em; }
+  .ladder .amt { font: 500 17px var(--f-mono); font-variant-numeric: tabular-nums; }
+  .ladder li.past { text-decoration: line-through; text-decoration-color: var(--smoke); opacity: .55; }
+  .ladder li.now { background: rgba(200,36,26,.09); color: var(--bone); box-shadow: inset 3px 0 0 var(--blood); }
+  .ladder li.now .amt { color: var(--bone); }
+  .tick { margin: 10px 0 0; font: 13px/1.5 var(--f-mono); color: var(--bone-dim); }
+  .tick b { color: var(--blood-hi); font-weight: 500; }
+
+  /* quantity */
+  .qty { display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px; align-items: stretch; border: 1px solid var(--line); }
+  .qty button { appearance: none; border: 0; background: var(--ash); color: var(--bone); font: 400 28px/1 var(--f-mono); min-height: 64px; cursor: pointer; }
+  .qty button:disabled { color: var(--line); cursor: default; }
+  .qty button:not(:disabled):hover { background: var(--ash2); }
+  .qty output { display: flex; flex-direction: column; align-items: center; justify-content: center; border-inline: 1px solid var(--line); }
+  .qty output strong { font: 400 34px/1 var(--f-body); }
+  .qty output span { font: 400 11px var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--bone-dim); margin-top: 4px; }
+  .total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; }
+  .total strong { font: 500 32px var(--f-mono); font-variant-numeric: tabular-nums; }
+
+  /* pay */
+  .apps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; padding: 0 14px; border: 1px solid var(--line); background: var(--ash); color: var(--bone); font: 500 12px var(--f-mono); letter-spacing: .16em; text-transform: uppercase; text-decoration: none; cursor: pointer; text-align: center; }
+  .btn:hover { border-color: var(--bone-dim); }
+  .btn.go { background: var(--blood); border-color: var(--blood); grid-column: 1 / -1; min-height: 60px; font-size: 13px; letter-spacing: .24em; }
+  .btn.go:hover { background: var(--blood-hi); }
+  .btn.ghost { background: transparent; }
+  .or { display: flex; align-items: center; gap: 12px; margin: 22px 0 16px; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .qrbox { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; }
+  .qr { background: #fff; padding: 8px; width: 168px; }
+  .qr img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+  .qrside { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .qrside p { margin: 0; font: italic 15px/1.45 var(--f-body); color: var(--bone-dim); }
+  .kv { margin-top: 18px; border: 1px solid var(--line); }
+  .kv div { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 8px 8px 14px; border-top: 1px solid var(--line); }
+  .kv div:first-child { border-top: 0; }
+  .kv dt { font: 400 11px var(--f-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--smoke); }
+  .kv dd { margin: 0; font: 400 15px var(--f-mono); overflow-wrap: anywhere; }
+  .copy { appearance: none; border: 1px solid var(--line); background: transparent; color: var(--bone-dim); font: 500 11px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; min-height: 40px; padding: 0 12px; cursor: pointer; }
+  .copy:hover { color: var(--bone); border-color: var(--bone-dim); }
+
+  /* proof form */
+  .field { display: block; margin-bottom: 16px; }
+  .field > span { display: block; margin-bottom: 6px; }
+  .field input[type=text], .field input[type=tel], .field input[type=email] { width: 100%; padding: 10px 0; background: transparent; border: 0; border-bottom: 1px solid var(--smoke); border-radius: 0; font: 20px var(--f-body); color: var(--bone); }
+  .field input:focus { outline: none; border-bottom-color: var(--blood-hi); }
+  .field input[aria-invalid="true"] { border-bottom-color: var(--blood-hi); }
+  .drop { position: relative; display: flex; align-items: center; gap: 14px; border: 1.5px dashed var(--smoke); padding: 14px; cursor: pointer; min-height: 84px; }
+  .drop:hover, .drop:focus-within { border-color: var(--bone-dim); }
+  .drop.has { border-style: solid; border-color: var(--ok); }
+  .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .drop .thumb { width: 52px; height: 52px; flex: none; background: var(--ash) center / cover; border: 1px solid var(--line); }
+  .drop .dt { font: italic 16px/1.35 var(--f-body); color: var(--bone-dim); }
+  .drop .dt b { display: block; font: 500 12px var(--f-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--bone); font-style: normal; margin-bottom: 2px; }
+  .guests { margin: 6px 0 4px; }
+  .guest { border-left: 2px solid var(--line); padding: 4px 0 2px 14px; margin-bottom: 14px; }
+  .guest .mono { display: block; margin-bottom: 4px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .check { display: flex; gap: 12px; align-items: flex-start; margin: 8px 0 4px; font: italic 16px/1.45 var(--f-body); color: #d6d1c9; cursor: pointer; }
+  .check input { width: 22px; height: 22px; margin: 2px 0 0; flex: none; accent-color: var(--blood); }
+  .err { min-height: 1.3em; margin: 6px 0 0; font: 13px/1.5 var(--f-mono); color: var(--blood-hi); }
+  .send { width: 100%; margin-top: 10px; padding: 16px; min-height: 58px; border: 0; background: var(--blood); color: var(--bone); font: 500 13px var(--f-mono); letter-spacing: .26em; text-transform: uppercase; cursor: pointer; }
+  .send:hover { background: var(--blood-hi); }
+  .send:disabled { opacity: .6; cursor: progress; }
+  .trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  /* done + pass */
+  .done { margin-top: 30px; border: 1px solid var(--line); padding: 26px 22px; text-align: center; }
+  .done h2 { margin: 0 0 8px; font: 400 40px/1 var(--f-black); }
+  .done p { margin: 0 auto; max-width: 34ch; font: italic 18px/1.5 var(--f-body); color: #d6d1c9; }
+  .pass { margin-top: 30px; position: relative; border: 1.5px dashed var(--blood); background: rgba(200,36,26,.06); padding: 26px 22px; text-align: center; }
+  .pass .code { font: 500 clamp(40px, 13vw, 60px)/1 var(--f-mono); letter-spacing: .06em; margin: 10px 0 6px; }
+  .pass .who { font: 400 26px/1.2 var(--f-body); }
+  .pass .cnt { font: italic 18px var(--f-body); color: var(--bone-dim); }
+  .pass.pending { border-color: var(--smoke); background: transparent; }
+  .status-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .status-row .field { flex: 1 1 200px; margin-bottom: 0; }
+  .status-row .btn { flex: none; }
+
+  /* faq */
+  .faq details { border-top: 1px solid var(--line); }
+  .faq details:last-child { border-bottom: 1px solid var(--line); }
+  .faq summary { list-style: none; cursor: pointer; padding: 15px 34px 15px 0; position: relative; font: 400 19px/1.35 var(--f-body); }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; position: absolute; right: 4px; top: 13px; font: 400 20px var(--f-mono); color: var(--bone-dim); }
+  .faq details[open] summary::after { content: "\2013"; }
+  .faq .a { padding: 0 0 16px; font: 16px/1.6 var(--f-body); color: #cfc9c0; }
+  .faq .a p { margin: 0 0 8px; }
+
+  footer { margin-top: 44px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  footer .logos { justify-content: center; }
+  .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--bone); color: var(--night); font: 500 12px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; padding: 10px 16px; opacity: 0; transition: opacity .25s; pointer-events: none; }
+  .toast.on { opacity: 1; }
+  @media (max-width: 400px) { .qrbox { grid-template-columns: 1fr; justify-items: center; } .qrside { text-align: center; align-items: center; } .two { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<main class="wrap">
+  <div class="top">
+    <div class="logos"><img class="lg-ref" src="img/ref.png" alt="References"><span class="x">&times;</span><img class="lg-jx" src="img/jinxed.png" alt="Jinxed"></div>
+    <span class="mono">Fri 30 Oct</span>
+  </div>
+
+  <header class="title">
+    <h1>Ghost Town</h1>
+    <div class="mono sub">Passes</div>
+    <div class="rule"></div>
+    <p class="hello" id="hello">The house has made room. Each guest on the list may now bring up to three.</p>
+  </header>
+
+  <p class="warn" id="setupWarn" hidden>Setup: the UPI ID in pay.html is still a placeholder. Payments won't work until it's replaced.</p>
+
+  <div id="flow">
+    <section class="step" aria-labelledby="h1s">
+      <div class="step-h"><span class="n">I</span><h2 id="h1s">The price climbs</h2></div>
+      <ol class="ladder" id="ladder"></ol>
+      <p class="tick" id="tick"></p>
+    </section>
+
+    <section class="step" aria-labelledby="h2s">
+      <div class="step-h"><span class="n">II</span><h2 id="h2s">How many?</h2></div>
+      <p class="lead">Yours, plus up to three people you&rsquo;ll answer for.</p>
+      <div class="qty">
+        <button type="button" id="minus" aria-label="One fewer pass">&minus;</button>
+        <output id="qtyOut" aria-live="polite"><strong id="qty">1</strong><span id="qtyWord">pass</span></output>
+        <button type="button" id="plus" aria-label="One more pass">+</button>
+      </div>
+      <div class="total"><span class="mono">To pay</span><strong id="total">₹800</strong></div>
+    </section>
+
+    <section class="step" aria-labelledby="h3s">
+      <div class="step-h"><span class="n">III</span><h2 id="h3s">Pay the house</h2></div>
+      <p class="lead" id="payLead">Tap your app. The amount and note are filled in. When it&rsquo;s done, screenshot the success screen and come back here.</p>
+      <div class="apps" id="apps">
+        <a class="btn go" id="payAny" href="#">Pay <span id="payAmt">₹800</span> by UPI</a>
+        <a class="btn" id="payGpay" href="#">GPay</a>
+        <a class="btn" id="payPhonepe" href="#">PhonePe</a>
+        <a class="btn" id="payPaytm" href="#">Paytm</a>
+        <a class="btn ghost" href="#manual" id="payManual">Pay by hand</a>
+      </div>
+      <div class="or mono" id="orLine">or scan</div>
+      <div class="qrbox">
+        <div class="qr"><img id="qrImg" alt="UPI QR code for this payment" width="152" height="152"></div>
+        <div class="qrside">
+          <p id="qrHint">Paying from another phone? Scan this. On this phone, save it and choose &ldquo;scan from gallery&rdquo; in your UPI app.</p>
+          <button class="btn ghost" type="button" id="saveQr">Save QR</button>
+        </div>
+      </div>
+      <dl class="kv" id="manual">
+        <div><dt>UPI ID</dt><dd id="vpa">&nbsp;</dd><button class="copy" type="button" data-copy="vpa">Copy</button></div>
+        <div><dt>Name</dt><dd id="payee">&nbsp;</dd><span></span></div>
+        <div><dt>Amount</dt><dd id="amt">&nbsp;</dd><button class="copy" type="button" data-copy="amt">Copy</button></div>
+        <div><dt>Note</dt><dd id="note">&nbsp;</dd><button class="copy" type="button" data-copy="note">Copy</button></div>
+      </dl>
+    </section>
+
+    <section class="step" aria-labelledby="h4s" id="proof">
+      <div class="step-h"><span class="n">IV</span><h2 id="h4s">Show us you paid</h2></div>
+      <p class="lead">We check every payment by hand. Your pass comes on WhatsApp once it clears.</p>
+      <form id="form" novalidate>
+        <label class="field">
+          <span class="mono">Payment screenshot</span>
+          <span class="drop" id="drop">
+            <span class="thumb" id="thumb"></span>
+            <span class="dt" id="dropText"><b>Add screenshot</b>The success screen from your UPI app</span>
+            <input type="file" id="shot" accept="image/*">
+          </span>
+        </label>
+        <label class="field">
+          <span class="mono">UPI reference (UTR), if you have it</span>
+          <input type="text" id="utr" inputmode="numeric" autocomplete="off" placeholder="12 digits" maxlength="22">
+        </label>
+        <div class="two">
+          <label class="field"><span class="mono">Your name</span><input type="text" id="name" autocomplete="name" required></label>
+          <label class="field"><span class="mono">Your WhatsApp</span><input type="tel" id="phone" autocomplete="tel" inputmode="tel" required placeholder="+91"></label>
+        </div>
+        <div class="guests" id="guests"></div>
+        <label class="check"><input type="checkbox" id="agree"> Everyone on my passes comes in costume and carries photo ID. I answer for them at the door.</label>
+        <div class="trap" aria-hidden="true"><label>Leave this empty <input type="text" id="website" tabindex="-1" autocomplete="off"></label></div>
+        <p class="err" id="err" role="alert"></p>
+        <button class="send" type="submit" id="send">Send to the house</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="done" id="done" hidden>
+    <div class="mono red">Received</div>
+    <h2>The house has it</h2>
+    <p id="doneText">We&rsquo;ll match your payment by hand and send your pass on WhatsApp, usually within a few hours. This page will show it too.</p>
+  </div>
+
+  <section class="step" aria-labelledby="h5s">
+    <div class="step-h"><span class="n">V</span><h2 id="h5s">Your pass</h2></div>
+    <p class="lead">Already paid? Check whether it&rsquo;s cleared. Show this at the door.</p>
+    <div class="status-row">
+      <label class="field"><span class="mono">Your WhatsApp</span><input type="tel" id="sPhone" inputmode="tel" autocomplete="tel" placeholder="+91"></label>
+      <button class="btn" type="button" id="sCheck">Check</button>
+    </div>
+    <p class="err" id="sErr" role="status"></p>
+    <div class="pass" id="pass" hidden></div>
+  </section>
+
+  <section class="step faq" aria-labelledby="h6s">
+    <div class="step-h"><span class="n">VI</span><h2 id="h6s">Questions</h2></div>
+    <div id="faq"></div>
+  </section>
+
+  <footer>
+    <div class="logos"><img class="lg-ref" src="img/ref.png" alt="References"><span class="x">&times;</span><img class="lg-jx" src="img/jinxed.png" alt="Jinxed"></div>
+    <span class="mono">Hosted by Ian Almeida</span>
+    <a class="mono" href="./" style="text-decoration:none">&larr; Back to the house</a>
+  </footer>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/qrcode.js"></script>
+<script>
+/* =====================  SETTINGS: edit these  ===================== */
+
+// Your UPI IDs. Guests are spread across them by guest number, so each guest always sees the same one.
+// "name" is shown as the payee and should match the name on that bank account.
+const UPI_ACCOUNTS = [
+  { vpa: "louellaalmeida98@okhdfcbank", name: "Louella Almeida" },
+  // Backup account goes here, e.g. { vpa: "second-id@okicici", name: "Name On Account" },
+  // { vpa: "third-id@oksbi", name: "Ian Almeida" },
+];
+
+// Price per pass, and when each price ends (India time). After the last one, sales close.
+const TIERS = [
+  { price: 800,  until: "2026-10-28T23:59:59+05:30", label: "Till Wed midnight" },
+  { price: 1200, until: "2026-10-29T23:59:59+05:30", label: "Thursday" },
+  { price: 1500, until: "2026-10-30T18:00:00+05:30", label: "Friday till 6 PM" },
+  { price: 2000, until: "2026-10-31T00:00:00+05:30", label: "Friday from 6 PM" },
+];
+
+const MAX_PASSES = 4;
+
+// WhatsApp number guests can message with problems (digits only, with country code). Leave "" to say "reply to our message".
+const HELP_WHATSAPP = "";
+
+// Supabase (same project as the invite requests).
+const SUPABASE_URL = "https://gwwiljdhsojlpdsqqxab.supabase.co";
+const SUPABASE_KEY = "sb_publishable_D5U449KkkGPhjupJ0s5Yfw_wiqGKCD0";
+const PROOF_BUCKET = "payment-proofs";
+
+/* ================================================================== */
+
+const PREVIEW = /*PREVIEW*/false;
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem("gt.pay." + k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem("gt.pay." + k, JSON.stringify(v)); } catch (e) {} },
+};
+const inr = (n) => "₹" + n.toLocaleString("en-IN");
+const digits = (s) => (s || "").replace(/\D/g, "");
+
+// Who is this? pay.html?g=142&n=Joseph
+const params = new URLSearchParams(location.search || (PREVIEW ? "?g=142&n=Joseph" : ""));
+const guestNo = parseInt(params.get("g"), 10) || store.get("g") || null;
+const firstName = (params.get("n") || store.get("n") || "").slice(0, 40);
+if (guestNo) store.set("g", guestNo);
+if (firstName) store.set("n", firstName);
+const code = guestNo ? "GT-" + guestNo : "GT-" + (store.get("rand") || (() => { const r = "X" + Math.floor(1000 + Math.random() * 9000); store.set("rand", r); return r; })());
+
+if (firstName || guestNo) {
+  $("hello").innerHTML = "";
+  const t = document.createElement("span");
+  t.append((firstName ? firstName + ", g" : "G") + "uest ");
+  const b = document.createElement("b"); b.textContent = "No. " + (guestNo || "?");
+  t.append(b, ". The house has made room. You may bring up to three.");
+  $("hello").append(t);
+}
+if (firstName) $("name").value = firstName;
+
+// Which UPI ID this guest pays
+const acct = UPI_ACCOUNTS[guestNo ? guestNo % UPI_ACCOUNTS.length : (store.get("acct") ?? (() => { const i = Math.floor(Math.random() * UPI_ACCOUNTS.length); store.set("acct", i); return i; })()) % UPI_ACCOUNTS.length];
+if (/REPLACE/i.test(acct.vpa)) $("setupWarn").hidden = false;
+
+// Price
+function tierNow(now = Date.now()) { return TIERS.findIndex((t) => now < Date.parse(t.until)); }
+let qty = Math.min(MAX_PASSES, Math.max(1, store.get("qty") || 1));
+let quoted = null; // price per pass when the page last rendered
+
+function renderLadder() {
+  const i = tierNow();
+  const ol = $("ladder"); ol.textContent = "";
+  TIERS.forEach((t, k) => {
+    const li = document.createElement("li");
+    li.className = k < i || i === -1 ? "past" : k === i ? "now" : "";
+    const w = document.createElement("span"); w.className = "when"; w.textContent = t.label + (k === i ? "  ·  now" : "");
+    const a = document.createElement("span"); a.className = "amt"; a.textContent = inr(t.price);
+    li.append(w, a); ol.append(li);
+  });
+  if (i === -1) {
+    $("tick").textContent = "Passes are closed.";
+    $("flow").hidden = true;
+    return;
+  }
+  const left = Date.parse(TIERS[i].until) - Date.now();
+  const h = Math.floor(left / 3.6e6), m = Math.floor((left % 3.6e6) / 6e4);
+  const next = TIERS[i + 1];
+  $("tick").innerHTML = "";
+  const s = document.createElement("span");
+  if (next) { s.append("Rises to " + inr(next.price) + " in "); const b = document.createElement("b"); b.textContent = (h ? h + "h " : "") + m + "m"; s.append(b, "."); }
+  else { s.append("Last price. Passes close at midnight."); }
+  $("tick").append(s);
+  if (quoted !== TIERS[i].price) { quoted = TIERS[i].price; renderPay(); }
+}
+
+function upiParams() {
+  const total = quoted * qty;
+  const note = "Ghost Town " + code + " x" + qty;
+  const p = new URLSearchParams({ pa: acct.vpa, pn: acct.name, am: total.toFixed(2), cu: "INR", tn: note });
+  return { total, note, qs: p.toString().replace(/\+/g, "%20").replace(/%40/g, "@") };
+}
+
+const ua = navigator.userAgent;
+const isAndroid = /Android/i.test(ua);
+const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isPhone = isAndroid || isIOS;
+
+function renderPay() {
+  if (quoted == null) return;
+  const { total, note, qs } = upiParams();
+  $("qty").textContent = qty; $("qtyWord").textContent = qty === 1 ? "pass" : "passes";
+  $("minus").disabled = qty <= 1; $("plus").disabled = qty >= MAX_PASSES;
+  $("total").textContent = inr(total); $("payAmt").textContent = inr(total);
+  $("vpa").textContent = acct.vpa; $("payee").textContent = acct.name; $("amt").textContent = total; $("note").textContent = note;
+
+  const upi = "upi://pay?" + qs;
+  const intent = (pkg) => "intent://pay?" + qs + "#Intent;scheme=upi;package=" + pkg + ";end";
+  $("payAny").href = upi;
+  if (isAndroid) {
+    $("payGpay").href = intent("com.google.android.apps.nbu.paisa.user");
+    $("payPhonepe").href = intent("com.phonepe.app");
+    $("payPaytm").href = intent("net.one97.paytm");
+  } else {
+    $("payGpay").href = "gpay://upi/pay?" + qs;
+    $("payPhonepe").href = "phonepe://pay?" + qs;
+    $("payPaytm").href = "paytmmp://pay?" + qs;
+  }
+  if (!isPhone) {
+    $("apps").hidden = true; $("orLine").hidden = true;
+    $("payLead").textContent = "Scan this with any UPI app on your phone. The amount and note are filled in. Screenshot the success screen, then add it below.";
+    $("qrHint").textContent = "Open GPay, PhonePe, Paytm or your bank's app and scan.";
+  }
+  drawQr(upi, total, note);
+  renderGuests();
+  store.set("qty", qty);
+}
+
+let qrSaveUrl = "";
+function drawQr(text, total, note) {
+  const q = qrcode(0, "M"); q.addData(text); q.make();
+  const n = q.getModuleCount(), cell = 8, pad = 4 * cell, size = n * cell + pad * 2;
+  const c = document.createElement("canvas"); c.width = size; c.height = size;
+  const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, size, size); x.fillStyle = "#000";
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) x.fillRect(pad + k * cell, pad + r * cell, cell, cell);
+  $("qrImg").src = c.toDataURL("image/png");
+  // a labelled version for saving to the gallery
+  const W = size + 120, H = size + 300, s = document.createElement("canvas"); s.width = W; s.height = H;
+  const y = s.getContext("2d"); y.fillStyle = "#070707"; y.fillRect(0, 0, W, H);
+  y.fillStyle = "#ece8e1"; y.textAlign = "center"; y.font = "64px UnifrakturMaguntia, serif"; y.fillText("Ghost Town", W / 2, 92);
+  y.drawImage(c, 60, 130);
+  y.font = "500 30px 'IBM Plex Mono', monospace"; y.fillText(inr(total) + " · " + qty + (qty === 1 ? " pass" : " passes"), W / 2, size + 190);
+  y.fillStyle = "#a39d94"; y.font = "22px 'IBM Plex Mono', monospace"; y.fillText(acct.vpa, W / 2, size + 232); y.fillText(note, W / 2, size + 266);
+  qrSaveUrl = s.toDataURL("image/png");
+}
+
+function renderGuests() {
+  const box = $("guests");
+  const keep = [...box.querySelectorAll(".guest")].map((g) => [g.querySelector(".gn").value, g.querySelector(".gp").value]);
+  box.textContent = "";
+  for (let i = 1; i < qty; i++) {
+    const d = document.createElement("div"); d.className = "guest";
+    d.innerHTML = '<span class="mono">Pass ' + (i + 1) + '</span><div class="two"><label class="field"><span class="mono">Their name</span><input type="text" class="gn" autocomplete="off"></label><label class="field"><span class="mono">Their WhatsApp</span><input type="tel" class="gp" inputmode="tel" autocomplete="off" placeholder="+91"></label></div>';
+    const prev = keep[i - 1] || (store.get("guests") || [])[i - 1];
+    if (prev) { d.querySelector(".gn").value = prev[0] || prev.name || ""; d.querySelector(".gp").value = prev[1] || prev.phone || ""; }
+    box.append(d);
+  }
+}
+
+$("minus").onclick = () => { if (qty > 1) { qty--; renderPay(); } };
+$("plus").onclick = () => { if (qty < MAX_PASSES) { qty++; renderPay(); } };
+
+// Remember that they left to pay, so coming back lands them on the proof step
+document.querySelectorAll("#apps a:not(#payManual)").forEach((a) => a.addEventListener("click", () => {
+  store.set("leftToPay", { at: Date.now(), qty, price: quoted });
+}));
+$("payManual").addEventListener("click", () => store.set("leftToPay", { at: Date.now(), qty, price: quoted }));
+
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 1600); }
+document.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", async () => {
+  const v = $(b.dataset.copy).textContent.trim();
+  try { await navigator.clipboard.writeText(v); toast("Copied"); }
+  catch (e) { const r = document.createRange(); r.selectNodeContents($(b.dataset.copy)); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast("Selected. Copy it"); }
+}));
+$("saveQr").onclick = () => {
+  const a = document.createElement("a"); a.href = qrSaveUrl; a.download = "ghost-town-" + code + ".png"; document.body.append(a); a.click(); a.remove();
+  toast("Saved to downloads");
+};
+
+// Screenshot picker: shrink before upload
+let shotBlob = null;
+$("shot").addEventListener("change", async () => {
+  const f = $("shot").files[0]; if (!f) return;
+  shotBlob = f;
+  try {
+    const url = URL.createObjectURL(f);
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    shotBlob = await new Promise((res) => c.toBlob((b) => res(b || f), "image/jpeg", .82));
+    $("thumb").style.backgroundImage = "url(" + url + ")";
+  } catch (e) { /* keep the original file */ }
+  $("drop").classList.add("has");
+  $("dropText").innerHTML = "<b>Screenshot added</b>Tap to change it";
+});
+
+function fail(msg, el) { $("err").textContent = msg; if (el) { el.setAttribute("aria-invalid", "true"); el.focus(); } }
+$("form").addEventListener("input", (e) => { e.target.removeAttribute("aria-invalid"); $("err").textContent = ""; });
+
+async function sb(path, opts) {
+  const res = await fetch(SUPABASE_URL + path, { ...opts, headers: { apikey: SUPABASE_KEY, ...(opts.headers || {}) } });
+  if (!res.ok) throw new Error(res.status + " " + (await res.text()).slice(0, 200));
+  return res;
+}
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if ($("website").value) return;
+  const name = $("name").value.trim(), phone = $("phone").value.trim(), utr = digits($("utr").value);
+  if (!shotBlob && !utr) return fail("Add the screenshot, or type the 12-digit UPI reference.", $("utr"));
+  if (utr && (utr.length < 12 || utr.length > 22)) return fail("The UPI reference is usually 12 digits.", $("utr"));
+  if (!name) return fail("Your name, please.", $("name"));
+  if (digits(phone).length < 10) return fail("Your WhatsApp number, please.", $("phone"));
+  const guests = [];
+  for (const g of $("guests").querySelectorAll(".guest")) {
+    const gn = g.querySelector(".gn"), gp = g.querySelector(".gp");
+    if (!gn.value.trim()) return fail("Every pass needs a name.", gn);
+    if (digits(gp.value).length < 10) return fail("Every pass needs a WhatsApp number.", gp);
+    guests.push({ name: gn.value.trim(), phone: gp.value.trim() });
+  }
+  if (!$("agree").checked) return fail("Tick the box. The house is strict about costumes.", $("agree"));
+
+  const left = store.get("leftToPay");
+  const price = left && left.qty === qty && left.price ? left.price : quoted; // the price they saw when they paid
+  const btn = $("send"); btn.disabled = true; btn.textContent = "Sending";
+  store.set("guests", guests); store.set("phone", phone);
+
+  let proofPath = null, uploadFailed = false;
+  try {
+    if (PREVIEW) { await new Promise((r) => setTimeout(r, 700)); }
+    else {
+      if (shotBlob) {
+        const ext = (shotBlob.type.split("/")[1] || "jpg").replace("jpeg", "jpg").replace(/[^a-z0-9]/g, "");
+        proofPath = new Date().toISOString().slice(0, 10) + "/" + code + "-" + Date.now() + "." + ext;
+        try { await sb("/storage/v1/object/" + PROOF_BUCKET + "/" + proofPath, { method: "POST", headers: { "Content-Type": shotBlob.type || "image/jpeg", "x-upsert": "false" }, body: shotBlob }); }
+        catch (err) { console.warn(err); proofPath = null; uploadFailed = true; }
+      }
+      await sb("/rest/v1/payments", {
+        method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ guest_no: guestNo, code, name, phone, passes: qty, price_each: price, amount: price * qty, upi_to: acct.vpa, utr: utr || null, proof_path: proofPath, guests }),
+      });
+    }
+    $("flow").hidden = true; $("done").hidden = false;
+    if (uploadFailed) $("doneText").textContent = "Your details reached us, but the screenshot didn't upload. Send it to us on WhatsApp so we can match it.";
+    $("done").scrollIntoView({ behavior: "smooth", block: "start" });
+    store.set("leftToPay", null); store.set("sent", { at: Date.now(), qty });
+    $("sPhone").value = phone;
+  } catch (err) {
+    console.error(err);
+    fail("That didn't reach the house. Check your connection and try again. If it keeps failing, send your screenshot to us on WhatsApp.");
+  } finally { btn.disabled = false; btn.textContent = "Send to the house"; }
+});
+
+// Pass status
+async function checkStatus(quiet) {
+  const p = digits($("sPhone").value);
+  if (p.length < 10) { if (!quiet) $("sErr").textContent = "Type the WhatsApp number you paid with."; return; }
+  $("sErr").textContent = quiet ? "" : "Checking";
+  try {
+    let rows;
+    if (PREVIEW) rows = store.get("sent") ? [{ status: "Pending", passes: store.get("sent").qty, code, name: firstName || "Guest" }] : [];
+    else rows = await (await sb("/rest/v1/rpc/pass_status", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_phone: p }) })).json();
+    store.set("phone", $("sPhone").value);
+    const box = $("pass"); box.textContent = "";
+    if (!rows.length) { box.hidden = true; $("sErr").textContent = quiet ? "" : "Nothing under that number yet."; return; }
+    $("sErr").textContent = "";
+    const r = rows[0];
+    const paid = r.status === "Paid";
+    box.className = "pass" + (paid ? "" : " pending");
+    const lab = document.createElement("div"); lab.className = "mono " + (paid ? "red" : ""); lab.textContent = paid ? "Admit" : r.status === "Pending" ? "Being checked" : r.status;
+    const c = document.createElement("div"); c.className = "code"; c.textContent = r.code || code;
+    const w = document.createElement("div"); w.className = "who"; w.textContent = r.name || "";
+    const n = document.createElement("div"); n.className = "cnt"; n.textContent = paid ? r.passes + (r.passes === 1 ? " entry" : " entries") + ". Show this at the door with photo ID." : "We haven't matched your payment yet. It usually takes a few hours.";
+    box.append(lab, c, w, n); box.hidden = false;
+  } catch (err) { console.error(err); if (!quiet) $("sErr").textContent = "Couldn't check right now. Try again in a minute."; }
+}
+$("sCheck").onclick = () => checkStatus(false);
+$("sPhone").addEventListener("keydown", (e) => { if (e.key === "Enter") checkStatus(false); });
+
+// FAQ
+const help = HELP_WHATSAPP ? 'message us on <a href="https://wa.me/' + HELP_WHATSAPP + '">WhatsApp</a>' : "reply to our WhatsApp message";
+const FAQ = [
+  ["How many passes can I buy?", "<p>Up to four: yours and three more. Every name on your passes follows the same terms. Costume compulsory, valid photo ID, right of admission reserved. You answer for them at the door.</p>"],
+  ["Why does the price go up?", "<p>The house is small and the list is long. The earlier you pay, the less it costs. The price you see when you pay is the price you get, even if it rises while you&rsquo;re paying.</p>"],
+  ["My UPI app blocked the payment or showed a warning.", "<p>Some apps block payments that start from a link. Tap <b>Pay by hand</b>: copy the UPI ID and amount, open your UPI app, choose &ldquo;Pay to UPI ID&rdquo;, and paste the note so we can find you. Or save the QR and scan it from your gallery.</p>"],
+  ["Where do I find the UPI reference (UTR)?", "<p>On the success screen or in the payment&rsquo;s details. GPay calls it &ldquo;UPI transaction ID&rdquo;, PhonePe calls it &ldquo;UTR&rdquo;. It&rsquo;s 12 digits. The screenshot alone is enough if you can&rsquo;t find it.</p>"],
+  ["I&rsquo;m on a laptop.", "<p>Scan the QR with any UPI app on your phone, then come back here to add the screenshot.</p>"],
+  ["When do I get my pass?", "<p>We check every payment by hand against our account, usually within a few hours. You&rsquo;ll get a WhatsApp from us, and step V on this page will show your pass. The address goes out on the 29th to paid guests only.</p>"],
+  ["I paid the wrong amount, or paid twice.", "<p>Don&rsquo;t worry. Add your screenshot here anyway and " + help + ". We&rsquo;ll sort it.</p>"],
+  ["What&rsquo;s included?", "<p>Entry from dusk till midnight, six DJs, and a Mama&rsquo;s Jamba Juice with every pass.</p>"],
+  ["Can I change a name on my passes?", "<p>Yes, before the 29th. Just " + help + ".</p>"],
+];
+$("faq").innerHTML = FAQ.map(([q, a]) => "<details><summary>" + q + "</summary><div class=\"a\">" + a + "</div></details>").join("");
+
+// Start
+renderLadder();
+setInterval(renderLadder, 30000);
+const saved = store.get("phone"); if (saved) { $("sPhone").value = saved; $("phone").value = $("phone").value || saved; }
+if (store.get("sent")) checkStatus(true);
+const left = store.get("leftToPay");
+if (left && Date.now() - left.at < 6 * 3.6e6) {
+  if (left.qty) { qty = left.qty; renderPay(); }
+  setTimeout(() => $("proof").scrollIntoView({ behavior: "smooth", block: "start" }), 300);
+}
+</script>
+</body>
+</html>
