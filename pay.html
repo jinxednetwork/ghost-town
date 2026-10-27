@@ -110,6 +110,8 @@
   .drop { position: relative; display: flex; align-items: center; gap: 14px; border: 2px dashed var(--blood); background: rgba(200,36,26,.07); padding: 16px; cursor: pointer; min-height: 96px; transition: background .2s, border-color .2s; }
   .drop:hover, .drop:focus-within { background: rgba(200,36,26,.14); border-color: var(--blood-hi); }
   .drop.has { border-style: solid; border-color: var(--ok); background: rgba(127,168,138,.08); }
+  .field > .drop { display: flex; flex-wrap: wrap; margin-bottom: 0; }
+  .drop .dt { flex: 1 1 150px; }
   .drop .pick { margin-left: auto; flex: none; padding: 10px 14px; background: var(--blood); color: var(--bone); font: 500 11px var(--f-mono); letter-spacing: .16em; text-transform: uppercase; }
   .drop.has .pick { background: transparent; border: 1px solid var(--ok); color: var(--ok); }
   .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
@@ -158,6 +160,7 @@
   footer .help a { color: var(--bone); white-space: nowrap; }
   .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--bone); color: var(--night); font: 500 12px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; padding: 10px 16px; opacity: 0; transition: opacity .25s; pointer-events: none; }
   .toast.on { opacity: 1; }
+  @media (max-width: 400px) { .drop .pick { flex: 1 1 100%; text-align: center; padding: 13px; } }
   @media (max-width: 400px) { .qrbox { grid-template-columns: 1fr; justify-items: center; } .qrside { text-align: center; align-items: center; } .two { grid-template-columns: 1fr; } }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
