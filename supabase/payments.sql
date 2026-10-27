@@ -118,14 +118,15 @@ begin
   if not exists (select 1 from door_keys k where k.key_hash = encode(sha256(convert_to(coalesce(p_key, ''), 'UTF8')), 'hex')) then
     raise exception 'bad door key' using errcode = '28000';
   end if;
-  -- Codes come from the invite link, so two bookings can share one. A typed code only works if it's unique;
-  -- otherwise the door must scan the QR (pass_token is always unique).
-  if (select count(*) from payments p where upper(p.code) = upper(trim(p_pass)) and p.status <> 'Declined') > 1 then
+  -- Codes come from the invite link, so two bookings can share one. A typed code only works if it belongs to
+  -- one Paid booking; otherwise the door must scan the QR (pass_token is always unique). Only Paid rows count,
+  -- so someone submitting a fake unpaid booking with a real guest's code can't block that guest.
+  if (select count(*) from payments p where upper(p.code) = upper(trim(p_pass)) and p.status = 'Paid') > 1 then
     raise exception 'code matches more than one booking' using errcode = 'P0001', hint = 'ambiguous';
   end if;
   select p.id into v_id from payments p
   where (p.pass_token::text = lower(trim(p_pass)) or upper(p.code) = upper(trim(p_pass))) and p.status <> 'Declined'
-  limit 1;
+  order by (p.status = 'Paid') desc, p.id limit 1;
   if v_id is not null and coalesce(p_admit, 0) > 0 then
     update payments p set checked_in = p.checked_in + least(p_admit, p.passes - p.checked_in), checked_in_at = now()
     where p.id = v_id and p.status = 'Paid' and p.checked_in < p.passes;
