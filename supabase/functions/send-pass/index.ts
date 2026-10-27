@@ -8,6 +8,7 @@ import QRCode from "npm:qrcode@1.5.4";
 const SITE = "https://jinxednetwork.github.io/ghost-town/";
 const FROM = Deno.env.get("PASS_FROM") ?? "Ghost Town <passes@jinxednetwork.com>";
 const REPLY_TO = "ian@jinxednetwork.com";
+const CC = ["jinxed.net@gmail.com"]; // host copy of every pass
 const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
 // Names come from guests, so never trust them in HTML.
@@ -54,7 +55,7 @@ Deno.serve(async (req) => {
     method: "POST",
     headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: FROM, to: [p.email], reply_to: REPLY_TO,
+      from: FROM, to: [p.email], cc: CC, reply_to: REPLY_TO,
       subject: `Your Ghost Town pass · ${p.code} · Admit ${p.passes}`,
       html,
       text: `Ghost Town, Fri 30 Oct. Admit ${p.passes}. ${p.code}, ${p.name}.\nYour pass: ${link}\nShow the QR at the door with photo ID.`,
