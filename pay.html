@@ -230,7 +230,7 @@
 
     <section class="step" aria-labelledby="h4s" id="proof">
       <div class="step-h"><span class="n">IV</span><h2 id="h4s">Show us you paid</h2></div>
-      <p class="lead">We check every payment by hand. Your pass comes on WhatsApp once it clears.</p>
+      <p class="lead">We check every payment by hand. Your pass, with its entry QR, comes by email once it clears.</p>
       <form id="form" novalidate>
         <label class="field">
           <span class="mono">Payment screenshot <span class="red">&middot; needed</span></span>
@@ -249,6 +249,7 @@
           <label class="field"><span class="mono">Your name</span><input type="text" id="name" autocomplete="name" required></label>
           <label class="field"><span class="mono">Your WhatsApp</span><input type="tel" id="phone" autocomplete="tel" inputmode="tel" required placeholder="+91"></label>
         </div>
+        <label class="field"><span class="mono">Email &middot; your pass is sent here</span><input type="email" id="email" autocomplete="email" inputmode="email" required placeholder="you@example.com" maxlength="200"></label>
         <div class="guests" id="guests"></div>
         <label class="check"><input type="checkbox" id="agree"> Everyone on my passes comes in costume and carries photo ID. I answer for them at the door.</label>
         <div class="trap" aria-hidden="true"><label>Leave this empty <input type="text" id="website" tabindex="-1" autocomplete="off"></label></div>
@@ -261,7 +262,7 @@
   <div class="done" id="done" hidden>
     <div class="mono red">Received</div>
     <h2>The house has it</h2>
-    <p id="doneText">We&rsquo;ll match your payment by hand and send your pass on WhatsApp, usually within a few hours. This page will show it too.</p>
+    <p id="doneText">We&rsquo;ll match your payment by hand and email you your pass with its entry QR, usually within a few hours. This page will show it too.</p>
   </div>
 
   <section class="step" aria-labelledby="h5s">
@@ -521,11 +522,12 @@ async function sb(path, opts) {
 $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   if ($("website").value) return;
-  const name = $("name").value.trim(), phone = $("phone").value.trim(), utr = digits($("utr").value);
+  const name = $("name").value.trim(), phone = $("phone").value.trim(), email = $("email").value.trim(), utr = digits($("utr").value);
   if (!shotBlob && !utr) { fail("Upload your payment screenshot first (or type the 12-digit UPI reference)."); $("drop").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
   if (utr && (utr.length < 12 || utr.length > 22)) return fail("The UPI reference is usually 12 digits.", $("utr"));
   if (!name) return fail("Your name, please.", $("name"));
   if (digits(phone).length < 10) return fail("Your WhatsApp number, please.", $("phone"));
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail("Your email, please. That's where your pass goes.", $("email"));
   const guests = [];
   for (const g of $("guests").querySelectorAll(".guest")) {
     const gn = g.querySelector(".gn"), gp = g.querySelector(".gp");
@@ -552,7 +554,7 @@ $("form").addEventListener("submit", async (e) => {
       }
       await sb("/rest/v1/payments", {
         method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
-        body: JSON.stringify({ guest_no: guestNo, code, name, phone, passes: qty, price_each: price, amount: price * qty, upi_to: acct.vpa, utr: utr || null, proof_path: proofPath, guests, lookup_hash: await sha256(token) }),
+        body: JSON.stringify({ guest_no: guestNo, code, name, phone, email, passes: qty, price_each: price, amount: price * qty, upi_to: acct.vpa, utr: utr || null, proof_path: proofPath, guests, lookup_hash: await sha256(token) }),
       });
     }
     $("flow").hidden = true; $("done").hidden = false;
@@ -608,7 +610,7 @@ const FAQ = [
   ["My UPI app blocked the payment or showed a warning.", "<p>Some apps block payments that start from a link. Tap <b>Pay by hand</b>: copy the UPI ID and amount, open your UPI app, choose &ldquo;Pay to UPI ID&rdquo;, and paste the note so we can find you. Or save the QR and scan it from your gallery.</p>"],
   ["Where do I find the UPI reference (UTR)?", "<p>On the success screen or in the payment&rsquo;s details. GPay calls it &ldquo;UPI transaction ID&rdquo;, PhonePe calls it &ldquo;UTR&rdquo;. It&rsquo;s 12 digits. The screenshot alone is enough if you can&rsquo;t find it.</p>"],
   ["I&rsquo;m on a laptop.", "<p>Scan the QR with any UPI app on your phone, then come back here to add the screenshot.</p>"],
-  ["When do I get my pass?", "<p>We check every payment by hand against our account, usually within a few hours. You&rsquo;ll get a WhatsApp from us, and step V on this page will show your pass. The address goes out on the 29th to paid guests only.</p>"],
+  ["When do I get my pass?", "<p>We check every payment by hand against our account, usually within a few hours. We email your pass with its entry QR (check spam if itYou&rsquo;ll get a WhatsApp from us, and step V on this page will show your pass.rsquo;s not there), and step V on this page shows it too. The address goes out on the 29th to paid guests only.</p>"],
   ["I paid the wrong amount, or paid twice.", "<p>Don&rsquo;t worry. Add your screenshot here anyway and " + help + ". We&rsquo;ll sort it.</p>"],
   ["What&rsquo;s included?", "<p>Entry from dusk till midnight, six DJs, and a Mama&rsquo;s Jamba Juice with every pass.</p>"],
   ["Something isn&rsquo;t working.", "<p>WhatsApp or call <a href=\"tel:+919819196888\">+91 98191 96888</a>, or email <a href=\"mailto:ian@jinxednetwork.com\">ian@jinxednetwork.com</a>. Send your screenshot along and we&rsquo;ll sort it out.</p>"],

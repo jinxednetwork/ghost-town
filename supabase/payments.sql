@@ -2,6 +2,13 @@
 -- Guests can add a payment and upload a screenshot. They can't read anyone's rows or screenshots.
 -- You review everything in Table Editor > payments, and screenshots in Storage > payment-proofs.
 
+-- Status is a dropdown in the Table Editor: Pending -> Paid (or Mismatch / Refunded / Declined).
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'payment_status') then
+    create type public.payment_status as enum ('Pending', 'Paid', 'Mismatch', 'Refunded', 'Declined');
+  end if;
+end $$;
+
 create table if not exists public.payments (
   id          bigint generated always as identity primary key,
   received    timestamptz not null default now(),
@@ -17,18 +24,29 @@ create table if not exists public.payments (
   proof_path  text check (char_length(proof_path) <= 300),
   lookup_hash text check (lookup_hash ~ '^[0-9a-f]{64}$'),
   guests      jsonb not null default '[]'::jsonb check (jsonb_typeof(guests) = 'array' and jsonb_array_length(guests) <= 3),
-  status      text not null default 'Pending' check (status in ('Pending', 'Paid', 'Mismatch', 'Refunded', 'Declined')),
+  status      public.payment_status not null default 'Pending',
   notes       text
 );
 
 alter table public.payments add column if not exists lookup_hash text check (lookup_hash ~ '^[0-9a-f]{64}$');
+alter table public.payments add column if not exists email text check (char_length(email) <= 200 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$');
+alter table public.payments add column if not exists pass_emailed_at timestamptz;
+alter table public.payments add column if not exists pass_email_error text;
+
+-- Older setups had status as text; switch it to the dropdown type (views and the policy are recreated below).
+drop view if exists public.payments_to_check, public.door_list, public.pass_links;
+drop policy if exists "guests can add a payment" on public.payments;
+alter table public.payments drop constraint if exists payments_status_check;
+alter table public.payments alter column status drop default;
+alter table public.payments alter column status type public.payment_status using status::text::public.payment_status;
+alter table public.payments alter column status set default 'Pending';
 
 alter table public.payments enable row level security;
 drop policy if exists "guests can add a payment" on public.payments;
 create policy "guests can add a payment" on public.payments for insert to anon with check (status = 'Pending');
 
 revoke all on public.payments from anon, authenticated;
-grant insert (guest_no, code, name, phone, passes, price_each, amount, upi_to, utr, proof_path, guests, lookup_hash) on public.payments to anon;
+grant insert (guest_no, code, name, phone, email, passes, price_each, amount, upi_to, utr, proof_path, guests, lookup_hash) on public.payments to anon;
 
 -- The database decides the price, not the page. A guest keeps the price they saw for 6 hours
 -- (same window pay.html uses), so the lowest allowed price is the tier that was on 6 hours ago.
@@ -69,7 +87,7 @@ language sql stable security definer set search_path = public as $$
   select case when p.status = 'Paid' then p.code end,
          case when p.status = 'Paid' then p.name end,
          case when p.status = 'Paid' then p.passes end,
-         p.status,
+         p.status::text,
          case when p.status = 'Paid' then p.pass_token end
   from public.payments p
   where length(regexp_replace(p_phone, '\D', '', 'g')) >= 10
@@ -91,7 +109,7 @@ language sql stable security definer set search_path = public as $$
          case when p.status = 'Paid' then array(select g->>'name' from jsonb_array_elements(p.guests) g) end,
          case when p.status = 'Paid' then p.passes end,
          case when p.status = 'Paid' then p.checked_in end,
-         p.status
+         p.status::text
   from public.payments p
   where p.pass_token = p_pass and p.status <> 'Declined';
 $$;
@@ -133,11 +151,30 @@ begin
   end if;
   return query
     select p.code, p.name, array(select g->>'name' from jsonb_array_elements(p.guests) g),
-           p.passes, p.checked_in, p.status, p.checked_in_at
+           p.passes, p.checked_in, p.status::text, p.checked_in_at
     from payments p where p.id = v_id;
 end $$;
 revoke all on function public.door_check(text, text, int) from public;
 grant execute on function public.door_check(text, text, int) to anon;
+
+-- Email the pass when a row becomes Paid (or when you clear pass_emailed_at to resend).
+-- Calls the send-pass Edge Function, which sends at most once per clear and records any error in pass_email_error.
+create extension if not exists pg_net;
+create or replace function public.payments_email_pass() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.status = 'Paid' and new.email is not null and new.pass_emailed_at is null
+     and (old.status is distinct from 'Paid' or old.pass_emailed_at is not null) then
+    perform net.http_post(
+      url := 'https://gwwiljdhsojlpdsqqxab.supabase.co/functions/v1/send-pass',
+      body := jsonb_build_object('id', new.id),
+      headers := '{"Content-Type": "application/json"}'::jsonb);
+  end if;
+  return new;
+end $$;
+drop trigger if exists payments_email_pass on public.payments;
+create trigger payments_email_pass after update on public.payments
+  for each row execute function public.payments_email_pass();
 
 -- Private bucket for payment screenshots (8 MB max, images only). Guests can upload, never list or read.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -151,7 +188,7 @@ create policy "guests can upload payment proofs" on storage.objects
 
 -- Handy views for you (dashboard only; guests can't see them).
 create or replace view public.payments_to_check with (security_invoker = true) as
-  select id, received, code, name, phone, passes, amount, upi_to, utr, proof_path, status
+  select id, received, code, name, phone, email, passes, amount, upi_to, utr, proof_path, status
   from public.payments where status = 'Pending' order by received;
 
 create or replace view public.door_list with (security_invoker = true) as
@@ -163,7 +200,7 @@ create or replace view public.door_list with (security_invoker = true) as
   order by 1, 4;
 -- Paid bookings with the link to send each guest on WhatsApp, and how many have arrived.
 create or replace view public.pass_links with (security_invoker = true) as
-  select p.code, p.name, p.phone, p.passes, p.checked_in,
+  select p.code, p.name, p.phone, p.email, p.pass_emailed_at, p.pass_email_error, p.passes, p.checked_in,
          'https://jinxednetwork.github.io/ghost-town/pass.html#' || p.pass_token as pass_link
   from public.payments p where p.status = 'Paid' order by p.received;
 revoke all on public.payments_to_check, public.door_list, public.pass_links from anon, authenticated;
