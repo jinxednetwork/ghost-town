@@ -101,7 +101,7 @@ function qrCanvas(text) {
 }
 
 function render(p) {
-  if (p.status !== "Paid") return say(p.status === "Pending" ? "Your payment is still being checked. This page turns into your pass once it clears." : "This pass isn't active. Message us and we'll sort it out.");
+  if (p.status !== "Paid") return say(p.status === "Pending" ? "Your payment is still being checked. This page turns into your pass once it clears." : "This pass has been cancelled. If that's a mistake, message us and we'll sort it out.");
   const qr = qrCanvas(link);
   const box = $("pass"); box.className = "pass"; box.textContent = "";
   const img = el("img", "qr"); img.src = qr.toDataURL("image/png"); img.alt = "Entry QR code for " + p.code;

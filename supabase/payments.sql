@@ -111,7 +111,7 @@ language sql stable security definer set search_path = public as $$
          case when p.status = 'Paid' then p.checked_in end,
          p.status::text
   from public.payments p
-  where p.pass_token = p_pass and p.status <> 'Declined';
+  where p.pass_token = p_pass;
 $$;
 revoke all on function public.get_pass(uuid) from public;
 grant execute on function public.get_pass(uuid) to anon;
