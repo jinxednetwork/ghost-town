@@ -157,14 +157,15 @@ end $$;
 revoke all on function public.door_check(text, text, int) from public;
 grant execute on function public.door_check(text, text, int) to anon;
 
--- Email the pass when a row becomes Paid (or when you clear pass_emailed_at to resend).
+-- Email the pass when a row becomes Paid, when you add/change the email on a Paid row,
+-- or when you clear pass_emailed_at to resend.
 -- Calls the send-pass Edge Function, which sends at most once per clear and records any error in pass_email_error.
 create extension if not exists pg_net;
 create or replace function public.payments_email_pass() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   if new.status = 'Paid' and new.email is not null and new.pass_emailed_at is null
-     and (old.status is distinct from 'Paid' or old.pass_emailed_at is not null) then
+     and (old.status is distinct from 'Paid' or old.pass_emailed_at is not null or old.email is distinct from new.email) then
     perform net.http_post(
       url := 'https://gwwiljdhsojlpdsqqxab.supabase.co/functions/v1/send-pass',
       body := jsonb_build_object('id', new.id),
