@@ -17,8 +17,8 @@ create table if not exists public.payments (
   name        text not null check (char_length(name) between 1 and 200),
   phone       text not null check (char_length(phone) between 1 and 40),
   passes      int not null check (passes between 1 and 4),
-  price_each  int not null check (price_each between 1 and 10000),
-  amount      int not null check (amount between 1 and 40000),
+  price_each  int not null check (price_each between 0 and 10000),
+  amount      int not null check (amount between 0 and 40000),
   upi_to      text check (char_length(upi_to) <= 100),
   utr         text check (char_length(utr) <= 30),
   proof_path  text check (char_length(proof_path) <= 300),
@@ -27,6 +27,11 @@ create table if not exists public.payments (
   status      public.payment_status not null default 'Pending',
   notes       text
 );
+
+-- Free guests are ₹0 rows you add yourself; guest inserts are still clamped to the tier price by payments_set_price.
+alter table public.payments drop constraint if exists payments_price_each_check, drop constraint if exists payments_amount_check;
+alter table public.payments add constraint payments_price_each_check check (price_each between 0 and 10000),
+  add constraint payments_amount_check check (amount between 0 and 40000);
 
 alter table public.payments add column if not exists lookup_hash text check (lookup_hash ~ '^[0-9a-f]{64}$');
 alter table public.payments add column if not exists email text check (char_length(email) <= 200 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$');
